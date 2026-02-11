@@ -76,19 +76,84 @@ const TopicsSection = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Link to="/artikel" className="block bg-card border border-border rounded-lg p-6 h-full hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer group">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <topic.icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-display text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {topic.title}
-                </h3>
-                <p className="text-muted-foreground font-body text-sm mt-2 leading-relaxed">
-                  {topic.description}
-                </p>
-                <p className="text-primary font-body text-xs mt-4 font-medium">
-                  {topic.articles} Artikel →
-                </p>
+              <Link to="/artikel">
+                <motion.div
+                  whileHover={{ 
+                    y: -12,
+                    scale: 1.02,
+                    transition: { duration: 0.3, ease: "easeOut" }
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  className="relative group bg-card border border-border rounded-lg p-6 h-full overflow-hidden cursor-pointer"
+                >
+                  {/* Animated glow background on hover */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    whileHover={{ opacity: 1, scale: 1.2 }}
+                    transition={{ duration: 0.4 }}
+                    className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-terracotta/10 blur-xl"
+                  />
+
+                  {/* Shimmer effect */}
+                  <motion.div
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "100%" }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                  />
+
+                  {/* Border glow on hover */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 rounded-lg border-2 border-primary/0 group-hover:border-primary/40"
+                  />
+
+                  <div className="relative z-10">
+                    {/* Icon with rotation animation */}
+                    <motion.div
+                      whileHover={{ rotate: 360, scale: 1.15 }}
+                      transition={{ duration: 0.6, ease: "easeInOut" }}
+                      className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all"
+                    >
+                      <topic.icon className="w-6 h-6 text-primary" />
+                    </motion.div>
+
+                    {/* Title with color transition */}
+                    <h3 className="font-display text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
+                      {topic.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-muted-foreground font-body text-sm mt-2 leading-relaxed group-hover:text-foreground/80 transition-colors duration-300">
+                      {topic.description}
+                    </p>
+
+                    {/* Arrow with slide animation */}
+                    <div className="flex items-center gap-2 mt-4">
+                      <p className="text-primary font-body text-xs font-medium">
+                        {topic.articles} Artikel
+                      </p>
+                      <motion.span
+                        initial={{ x: 0 }}
+                        whileHover={{ x: 4 }}
+                        transition={{ duration: 0.3, repeat: Infinity, repeatType: "reverse" }}
+                        className="text-primary"
+                      >
+                        →
+                      </motion.span>
+                    </div>
+                  </div>
+
+                  {/* Corner accent */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    whileHover={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full"
+                  />
+                </motion.div>
               </Link>
             </motion.div>
           ))}

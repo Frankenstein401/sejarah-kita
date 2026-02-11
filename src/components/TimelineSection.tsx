@@ -42,7 +42,7 @@ const events: TimelineEvent[] = [
   },
   {
     year: "1908",
-    title: "Kebangkitan Nasional",
+    title: "Kebangkatan Nasional",
     era: "Pergerakan",
     description: "Budi Utomo didirikan sebagai organisasi modern pertama, menandai era pergerakan nasional menuju kemerdekaan.",
   },
@@ -80,29 +80,144 @@ const TimelineItem = ({ event, index }: { event: TimelineEvent; index: number })
         transition={{ duration: 0.6, delay: 0.2 }}
         className={`w-full md:w-5/12 ${isLeft ? "md:text-right" : "md:text-left"}`}
       >
-        <div className="bg-card p-6 rounded-lg border border-border hover:border-primary/30 transition-colors duration-300 group cursor-pointer">
-          <div className={`flex items-center gap-2 mb-2 ${isLeft ? "md:justify-end" : ""}`}>
-            <span className={`text-xs px-2 py-0.5 rounded-full text-primary-foreground ${eraColors[event.era] || "bg-muted"}`}>
-              {event.era}
-            </span>
-            <span className="text-sm font-body text-muted-foreground">{event.year}</span>
+        <motion.div
+          whileHover={{ 
+            scale: 1.05,
+            y: -8,
+            transition: { duration: 0.3, ease: "easeOut" }
+          }}
+          whileTap={{ scale: 0.98 }}
+          className="relative group bg-card p-6 rounded-lg border border-border cursor-pointer overflow-hidden"
+        >
+          {/* Gradient glow on hover */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileHover={{ opacity: 1, scale: 1.3 }}
+            transition={{ duration: 0.5 }}
+            className={`absolute inset-0 bg-gradient-to-br ${
+              eraColors[event.era] === "bg-primary" 
+                ? "from-primary/20 via-transparent to-gold/10" 
+                : eraColors[event.era] === "bg-forest"
+                ? "from-forest/20 via-transparent to-primary/10"
+                : eraColors[event.era] === "bg-terracotta"
+                ? "from-terracotta/20 via-transparent to-accent/10"
+                : "from-accent/20 via-transparent to-primary/10"
+            } blur-xl`}
+          />
+
+          {/* Shimmer effect */}
+          <motion.div
+            initial={{ x: isLeft ? "-100%" : "100%" }}
+            whileHover={{ x: isLeft ? "100%" : "-100%" }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+          />
+
+          {/* Border glow */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className={`absolute inset-0 rounded-lg border-2 ${
+              eraColors[event.era] === "bg-primary" 
+                ? "border-primary/40" 
+                : eraColors[event.era] === "bg-forest"
+                ? "border-forest/40"
+                : eraColors[event.era] === "bg-terracotta"
+                ? "border-terracotta/40"
+                : "border-accent/40"
+            }`}
+          />
+
+          <div className="relative z-10">
+            {/* Badge & Year */}
+            <div className={`flex items-center gap-2 mb-2 ${isLeft ? "md:justify-end" : ""}`}>
+              <motion.span
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2 }}
+                className={`text-xs px-2 py-0.5 rounded-full text-primary-foreground ${eraColors[event.era] || "bg-muted"} group-hover:shadow-lg transition-shadow`}
+              >
+                {event.era}
+              </motion.span>
+              <span className="text-sm font-body text-muted-foreground group-hover:text-foreground transition-colors">
+                {event.year}
+              </span>
+            </div>
+
+            {/* Title with gradient on hover */}
+            <motion.h3
+              whileHover={{ x: isLeft ? -4 : 4 }}
+              transition={{ duration: 0.3 }}
+              className="font-display text-xl font-semibold text-foreground group-hover:text-primary transition-colors duration-300"
+            >
+              {event.title}
+            </motion.h3>
+
+            {/* Description */}
+            <p className="text-muted-foreground font-body text-sm mt-2 leading-relaxed group-hover:text-foreground/80 transition-colors duration-300">
+              {event.description}
+            </p>
+
+            {/* Read more indicator */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileHover={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`mt-3 flex items-center gap-1 text-xs text-primary font-medium ${isLeft ? "md:justify-end" : ""}`}
+            >
+              <span>Baca selengkapnya</span>
+              <motion.span
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                →
+              </motion.span>
+            </motion.div>
           </div>
-          <h3 className="font-display text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-            {event.title}
-          </h3>
-          <p className="text-muted-foreground font-body text-sm mt-2 leading-relaxed">
-            {event.description}
-          </p>
-        </div>
+
+          {/* Corner decoration */}
+          <motion.div
+            initial={{ scale: 0, rotate: 0 }}
+            whileHover={{ scale: 1, rotate: 45 }}
+            transition={{ duration: 0.4 }}
+            className={`absolute ${isLeft ? "top-0 right-0" : "top-0 left-0"} w-16 h-16 ${
+              eraColors[event.era] === "bg-primary" 
+                ? "bg-primary/20" 
+                : eraColors[event.era] === "bg-forest"
+                ? "bg-forest/20"
+                : eraColors[event.era] === "bg-terracotta"
+                ? "bg-terracotta/20"
+                : "bg-accent/20"
+            } ${isLeft ? "rounded-bl-full" : "rounded-br-full"}`}
+          />
+        </motion.div>
       </motion.div>
 
+      {/* Timeline dot with pulse animation */}
       <div className="hidden md:flex w-2/12 justify-center relative">
         <motion.div
           initial={{ scale: 0 }}
           animate={isInView ? { scale: 1 } : {}}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="w-4 h-4 bg-primary rounded-full border-4 border-background z-10 shadow-lg shadow-primary/20"
-        />
+          className="relative"
+        >
+          {/* Pulse ring */}
+          <motion.div
+            animate={{ 
+              scale: [1, 1.5, 1],
+              opacity: [0.5, 0, 0.5]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute inset-0 w-4 h-4 bg-primary rounded-full -m-0"
+          />
+          
+          {/* Main dot */}
+          <div className="w-4 h-4 bg-primary rounded-full border-4 border-background z-10 shadow-lg shadow-primary/20" />
+        </motion.div>
       </div>
 
       <div className="hidden md:block w-5/12" />
@@ -130,7 +245,15 @@ const TimelineSection = () => {
         </motion.div>
 
         <div className="relative">
-          <div className="timeline-line hidden md:block" />
+          {/* Animated timeline line */}
+          <motion.div
+            initial={{ scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="timeline-line hidden md:block origin-top"
+          />
+          
           {events.map((event, index) => (
             <TimelineItem key={event.title} event={event} index={index} />
           ))}
