@@ -21,6 +21,8 @@ interface TimelineEvent {
   detail: string;
   significance: string[];
   figures?: string[];
+  image: string;
+  imageCaption: string;
 }
 
 const events: TimelineEvent[] = [
