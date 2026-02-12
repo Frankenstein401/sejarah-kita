@@ -137,6 +137,7 @@ const ArticleDetail = () => {
   }
 
   const related = getRelatedArticles(article.relatedSlugs);
+  const quiz = getQuizBySlug(article.slug);
   const images = articleImages[article.slug];
   const heroSrc =
     images?.hero || eraFallback[article.era] || "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=1200&q=80";
