@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, BookOpen, Clock, ChevronRight, ImageOff } from "lucide-react";
 import { useState } from "react";
 import { getArticleBySlug, getRelatedArticles } from "@/data/articles";
+import { getQuizBySlug } from "@/data/quizzes";
+import ArticleQuiz from "@/components/ArticleQuiz";
 import ReadingProgressBar from "@/components/ReadingProgressBar";
 import BackToTop from "@/components/BackToTop";
 import FunFactToast from "@/components/FunFactToast";
@@ -135,6 +137,7 @@ const ArticleDetail = () => {
   }
 
   const related = getRelatedArticles(article.relatedSlugs);
+  const quiz = getQuizBySlug(article.slug);
   const images = articleImages[article.slug];
   const heroSrc =
     images?.hero || eraFallback[article.era] || "https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=1200&q=80";
@@ -249,6 +252,22 @@ const ArticleDetail = () => {
           ))}
         </div>
       </section>
+
+      {/* ── Quiz Section ────────────────────────────────────────────── */}
+      {quiz && (
+        <section className="pb-16 px-6">
+          <div className="max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent mb-10" />
+              <ArticleQuiz quiz={quiz} articleTitle={article.title} />
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ── Related Articles ─────────────────────────────────────────── */}
       {related.length > 0 && (
