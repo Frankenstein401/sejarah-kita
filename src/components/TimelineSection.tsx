@@ -2,6 +2,16 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { X, BookOpen, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import TimelinePhoto from "./timeline/TimelinePhoto";
+
+import kutaiImg from "@/assets/timeline/kutai.jpg";
+import sriwijayaImg from "@/assets/timeline/sriwijaya.jpg";
+import borobudurImg from "@/assets/timeline/borobudur.jpg";
+import majapahitImg from "@/assets/timeline/majapahit.jpg";
+import kesultananImg from "@/assets/timeline/kesultanan.jpg";
+import kebangkitanImg from "@/assets/timeline/kebangkitan.jpg";
+import sumpahpemudaImg from "@/assets/timeline/sumpahpemuda.jpg";
+import proklamasiImg from "@/assets/timeline/proklamasi.jpg";
 
 interface TimelineEvent {
   year: string;
