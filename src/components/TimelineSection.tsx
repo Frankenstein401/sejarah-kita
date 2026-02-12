@@ -112,6 +112,8 @@ const events: TimelineEvent[] = [
       "20 Mei diperingati sebagai Hari Kebangkitan Nasional",
     ],
     figures: ["dr. Wahidin Soedirohoesodo", "dr. Soetomo", "dr. Cipto Mangunkusumo"],
+    image: kebangkitanImg,
+    imageCaption: "Rapat Budi Utomo, 1908",
   },
   {
     year: "1928",
