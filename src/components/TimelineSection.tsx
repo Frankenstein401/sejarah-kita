@@ -53,6 +53,8 @@ const events: TimelineEvent[] = [
       "Menguasai jalur pelayaran Selat Malaka selama berabad-abad",
     ],
     figures: ["Raja Dapunta Hyang Sri Jayanasa", "Balaputradewa", "I-Tsing (pendeta Cina yang mencatat perjalanannya)"],
+    image: sriwijayaImg,
+    imageCaption: "Armada Laut Sriwijaya",
   },
   {
     year: "Abad ke-8",
