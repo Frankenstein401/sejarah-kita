@@ -253,6 +253,22 @@ const ArticleDetail = () => {
         </div>
       </section>
 
+      {/* ── Quiz Section ────────────────────────────────────────────── */}
+      {quiz && (
+        <section className="pb-16 px-6">
+          <div className="max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent mb-10" />
+              <ArticleQuiz quiz={quiz} articleTitle={article.title} />
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       {/* ── Related Articles ─────────────────────────────────────────── */}
       {related.length > 0 && (
         <section className="py-16 px-6 bg-card border-t border-border">
