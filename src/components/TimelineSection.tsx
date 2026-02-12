@@ -142,6 +142,8 @@ const events: TimelineEvent[] = [
       "17 Agustus diperingati sebagai Hari Kemerdekaan Indonesia",
     ],
     figures: ["Ir. Soekarno", "Drs. Mohammad Hatta", "Fatmawati (penjahit bendera)"],
+    image: proklamasiImg,
+    imageCaption: "Proklamasi Kemerdekaan, 1945",
   },
 ];
 
