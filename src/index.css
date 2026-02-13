@@ -149,6 +149,10 @@
   border-top-color: hsl(var(--border)) !important;
 }
 
+.leaflet-container {
+  z-index: 0 !important;
+}
+
 .leaflet-control-zoom a {
   background: hsl(var(--card)) !important;
   color: hsl(var(--foreground)) !important;

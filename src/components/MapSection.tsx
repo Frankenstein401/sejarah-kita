@@ -244,7 +244,7 @@ const MapSection = () => {
         >
           <div
             ref={mapRef}
-            className="w-full h-[450px] md:h-[550px]"
+            className="w-full h-[450px] md:h-[550px] relative z-0"
             style={{ background: "hsl(var(--card))" }}
           />
         </motion.div>
