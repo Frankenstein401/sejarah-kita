@@ -10,6 +10,7 @@ import ArticleList from "./pages/ArticleList";
 import ArticleDetail from "./pages/ArticleDetail";
 import NotFound from "./pages/NotFound";
 import AboutPage from "./pages/AboutPage";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => {
         {loading && <LoadingScreen onFinish={() => setLoading(false)} />}
         {!loading && (
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/artikel" element={<ArticleList />} />
