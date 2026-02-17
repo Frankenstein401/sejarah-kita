@@ -10,6 +10,7 @@ import ReadingProgressBar from "@/components/ReadingProgressBar";
 import BackToTop from "@/components/BackToTop";
 import FunFactToast from "@/components/FunFactToast";
 import FooterSection from "@/components/FooterSection";
+import ArticleDecoration from "@/components/ArticleDecoration";
 
 // Map each article slug to relevant Wikimedia Commons / reliable images
 const articleImages: Record<string, { hero: string; sections: Record<number, string> }> = {
@@ -162,6 +163,7 @@ const ArticleDetail = () => {
   return (
     <main className="min-h-screen bg-background">
       <ArticleNavbar />
+      <ArticleDecoration era={article.era} />
 
       {/* ── Hero Image ───────────────────────────────────────────────── */}
       <motion.div
