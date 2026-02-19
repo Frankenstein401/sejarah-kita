@@ -1,104 +1,98 @@
 import { motion } from "framer-motion";
 
-// SVG decorative elements per era
-const eraDecorations: Record<string, { left: React.ReactNode[]; right: React.ReactNode[] }> = {
+// Era-specific SVG shapes (absolute-positioned within hero)
+const eraShapes: Record<string, { bg: React.ReactNode; accent: React.ReactNode }> = {
   "Hindu-Buddha": {
-    left: [
-      // Stupa / candi silhouette
-      <svg key="stupa" viewBox="0 0 60 120" className="w-10 md:w-14 text-primary/10">
-        <path d="M30 5 L10 45 L10 80 L5 80 L5 115 L55 115 L55 80 L50 80 L50 45 Z" fill="currentColor" />
-        <circle cx="30" cy="20" r="6" fill="currentColor" opacity="0.5" />
-      </svg>,
-      <svg key="lotus" viewBox="0 0 60 40" className="w-8 md:w-12 text-primary/8">
-        <path d="M30 35 Q15 20 5 30 Q15 10 30 5 Q45 10 55 30 Q45 20 30 35Z" fill="currentColor" />
-      </svg>,
-    ],
-    right: [
-      <svg key="bell" viewBox="0 0 50 80" className="w-8 md:w-12 text-primary/10">
-        <path d="M25 5 Q5 25 10 55 L40 55 Q45 25 25 5Z" fill="currentColor" />
-        <rect x="15" y="55" width="20" height="5" fill="currentColor" opacity="0.5" />
-      </svg>,
-      <svg key="wheel" viewBox="0 0 50 50" className="w-8 md:w-10 text-primary/8">
-        <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" strokeWidth="2" />
-        <circle cx="25" cy="25" r="5" fill="currentColor" />
-        {[0, 45, 90, 135].map((a) => (
-          <line key={a} x1="25" y1="25" x2={25 + 18 * Math.cos((a * Math.PI) / 180)} y2={25 + 18 * Math.sin((a * Math.PI) / 180)} stroke="currentColor" strokeWidth="1.5" />
+    bg: (
+      <svg viewBox="0 0 120 200" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="32" rx="13" ry="18" />
+        <polygon points="47,20 52,4 60,12 68,4 73,20" />
+        <path d="M44 50 Q28 72 24 102 L96 102 Q92 72 76 50Z" />
+        <rect x="18" y="102" width="84" height="18" rx="2" />
+        <rect x="8" y="120" width="104" height="14" rx="2" />
+        <rect x="4" y="134" width="112" height="62" rx="3" />
+      </svg>
+    ),
+    accent: (
+      <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="1.5" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="40" cy="40" r="34" />
+        <circle cx="40" cy="40" r="8" fill="currentColor" stroke="none" />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+          <line
+            key={a}
+            x1="40"
+            y1="40"
+            x2={40 + 29 * Math.cos((a * Math.PI) / 180)}
+            y2={40 + 29 * Math.sin((a * Math.PI) / 180)}
+          />
         ))}
-      </svg>,
-    ],
+      </svg>
+    ),
   },
   "Kesultanan": {
-    left: [
-      // Crescent moon
-      <svg key="crescent" viewBox="0 0 50 50" className="w-8 md:w-12 text-primary/10">
-        <path d="M25 5 A20 20 0 1 0 25 45 A14 14 0 1 1 25 5Z" fill="currentColor" />
-      </svg>,
-      <svg key="dome" viewBox="0 0 60 50" className="w-8 md:w-12 text-primary/8">
-        <path d="M5 50 L5 30 Q30 -5 55 30 L55 50Z" fill="currentColor" />
-      </svg>,
-    ],
-    right: [
-      <svg key="star" viewBox="0 0 50 50" className="w-8 md:w-10 text-primary/10">
-        <polygon points="25,3 31,18 48,20 35,31 38,47 25,39 12,47 15,31 2,20 19,18" fill="currentColor" />
-      </svg>,
-      <svg key="arch" viewBox="0 0 40 60" className="w-7 md:w-10 text-primary/8">
-        <path d="M5 60 L5 25 Q20 0 35 25 L35 60" fill="none" stroke="currentColor" strokeWidth="3" />
-      </svg>,
-    ],
+    bg: (
+      <svg viewBox="0 0 120 180" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 178 L8 96 Q60 8 112 96 L112 178Z" />
+        <ellipse cx="60" cy="12" rx="9" ry="14" />
+        <rect x="22" y="110" width="76" height="68" />
+        <rect x="36" y="118" width="18" height="32" />
+        <rect x="66" y="118" width="18" height="32" />
+      </svg>
+    ),
+    accent: (
+      <svg viewBox="0 0 80 80" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M40 4 A36 36 0 1 0 40 76 A26 26 0 1 1 40 4Z" />
+        <polygon points="61,18 64,29 75,29 66,36 70,47 61,40 52,47 56,36 47,29 58,29" />
+      </svg>
+    ),
   },
   "Kolonial": {
-    left: [
-      // Keris silhouette
-      <svg key="keris" viewBox="0 0 20 100" className="w-5 md:w-7 text-primary/10">
-        <path d="M10 5 Q5 20 12 30 Q7 40 13 50 Q8 60 12 70 Q9 80 10 95" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      </svg>,
-      <svg key="shield" viewBox="0 0 40 50" className="w-7 md:w-10 text-primary/8">
-        <path d="M20 5 L5 15 L5 30 Q20 50 35 30 L35 15Z" fill="currentColor" />
-      </svg>,
-    ],
-    right: [
-      <svg key="flag" viewBox="0 0 50 60" className="w-8 md:w-10 text-primary/10">
-        <rect x="5" y="5" width="3" height="50" fill="currentColor" />
-        <path d="M8 8 L45 15 L8 25Z" fill="currentColor" opacity="0.7" />
-      </svg>,
-    ],
+    bg: (
+      <svg viewBox="0 0 110 160" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="55,4 4,52 106,52" />
+        <rect x="8" y="52" width="94" height="108" />
+        <rect x="14" y="62" width="24" height="32" fill="white" opacity="0.15" />
+        <rect x="72" y="62" width="24" height="32" fill="white" opacity="0.15" />
+        <rect x="38" y="100" width="34" height="60" fill="white" opacity="0.1" />
+        <rect x="4" y="48" width="102" height="8" />
+      </svg>
+    ),
+    accent: (
+      <svg viewBox="0 0 40 100" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 5 Q12 18 18 32 Q12 46 18 60 Q12 74 20 90" />
+      </svg>
+    ),
   },
   "Pergerakan": {
-    left: [
-      // Book
-      <svg key="book" viewBox="0 0 50 40" className="w-8 md:w-12 text-primary/10">
-        <path d="M25 35 L5 30 L5 5 L25 10Z" fill="currentColor" />
-        <path d="M25 35 L45 30 L45 5 L25 10Z" fill="currentColor" opacity="0.6" />
-      </svg>,
-      <svg key="pen" viewBox="0 0 15 80" className="w-4 md:w-5 text-primary/8">
-        <rect x="4" y="5" width="7" height="55" rx="2" fill="currentColor" />
-        <polygon points="4,60 11,60 7.5,75" fill="currentColor" />
-      </svg>,
-    ],
-    right: [
-      <svg key="torch" viewBox="0 0 30 80" className="w-6 md:w-8 text-primary/10">
-        <rect x="12" y="30" width="6" height="45" rx="2" fill="currentColor" />
-        <path d="M15 5 Q5 15 10 30 L20 30 Q25 15 15 5Z" fill="currentColor" opacity="0.7" />
-      </svg>,
-    ],
+    bg: (
+      <svg viewBox="0 0 100 140" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 4 Q18 20 18 72 L50 84 L82 72 Q82 20 50 4Z" opacity="0.85" />
+        <path d="M32 84 L32 136 L68 136 L68 84Z" />
+        <path d="M37 84 L37 78 Q50 60 63 78 L63 84Z" />
+      </svg>
+    ),
+    accent: (
+      <svg viewBox="0 0 70 90" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <rect x="28" y="4" width="14" height="56" rx="3" />
+        <polygon points="28,60 42,60 48,78 22,78" />
+        <rect x="12" y="28" width="46" height="5" rx="2" />
+        <rect x="12" y="40" width="46" height="5" rx="2" />
+      </svg>
+    ),
   },
   "Kemerdekaan": {
-    left: [
-      // Flag
-      <svg key="flag2" viewBox="0 0 60 50" className="w-10 md:w-14 text-primary/10">
-        <rect x="5" y="5" width="3" height="40" fill="currentColor" />
-        <rect x="8" y="5" width="40" height="10" fill="currentColor" opacity="0.8" />
-        <rect x="8" y="15" width="40" height="10" fill="currentColor" opacity="0.4" />
-      </svg>,
-      <svg key="garuda" viewBox="0 0 50 50" className="w-8 md:w-12 text-primary/8">
-        <path d="M25 10 L15 25 L5 20 L10 35 L20 40 L25 50 L30 40 L40 35 L45 20 L35 25Z" fill="currentColor" />
-      </svg>,
-    ],
-    right: [
-      <svg key="star2" viewBox="0 0 50 50" className="w-8 md:w-10 text-primary/10">
-        <polygon points="25,5 29,20 45,20 32,29 36,45 25,35 14,45 18,29 5,20 21,20" fill="currentColor" />
-      </svg>,
-    ],
+    bg: (
+      <svg viewBox="0 0 110 130" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="4" width="7" height="122" rx="2" />
+        <rect x="13" y="7" width="84" height="38" />
+        <rect x="13" y="45" width="84" height="38" opacity="0.4" />
+      </svg>
+    ),
+    accent: (
+      <svg viewBox="0 0 80 80" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="40,4 47,26 70,26 52,40 59,62 40,48 21,62 28,40 10,26 33,26" />
+      </svg>
+    ),
   },
 };
 
@@ -107,60 +101,43 @@ interface ArticleDecorationProps {
 }
 
 const ArticleDecoration = ({ era }: ArticleDecorationProps) => {
-  const decorations = eraDecorations[era] || eraDecorations["Hindu-Buddha"];
+  const shapes = eraShapes[era] || eraShapes["Hindu-Buddha"];
 
   return (
     <>
-      {/* Left side decorations - hidden on mobile */}
-      <div className="hidden lg:flex fixed left-4 xl:left-12 top-1/2 -translate-y-1/2 flex-col items-center gap-8 z-10 pointer-events-none">
-        {decorations.left.map((el, i) => (
-          <motion.div
-            key={`left-${i}`}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 + i * 0.3 }}
-          >
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 4 + i, repeat: Infinity, ease: "easeInOut" }}
-            >
-              {el}
-            </motion.div>
-          </motion.div>
-        ))}
-        {/* Vertical decorative line */}
+      {/* Large background watermark — top-right of hero */}
+      <motion.div
+        initial={{ opacity: 0, scale: 1.2, x: 30 }}
+        animate={{ opacity: 1, scale: 1, x: 0 }}
+        transition={{ duration: 1.6, ease: "easeOut", delay: 0.2 }}
+        className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none select-none z-[1]"
+        aria-hidden="true"
+      >
         <motion.div
-          initial={{ scaleY: 0 }}
-          animate={{ scaleY: 1 }}
-          transition={{ duration: 1, delay: 1.2 }}
-          className="w-px h-24 bg-gradient-to-b from-transparent via-primary/15 to-transparent origin-top"
-        />
-      </div>
+          animate={{ rotate: [0, 1.5, -1.5, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+          className="w-52 h-52 md:w-72 md:h-72 text-white/[0.06]"
+        >
+          {shapes.bg}
+        </motion.div>
+      </motion.div>
 
-      {/* Right side decorations - hidden on mobile */}
-      <div className="hidden lg:flex fixed right-4 xl:right-12 top-1/2 -translate-y-1/2 flex-col items-center gap-8 z-10 pointer-events-none">
-        {decorations.right.map((el, i) => (
-          <motion.div
-            key={`right-${i}`}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 + i * 0.3 }}
-          >
-            <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 5 + i, repeat: Infinity, ease: "easeInOut" }}
-            >
-              {el}
-            </motion.div>
-          </motion.div>
-        ))}
+      {/* Accent shape — floats bottom-left */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.2, ease: "easeOut", delay: 0.5 }}
+        className="absolute left-8 md:left-20 bottom-20 md:bottom-24 pointer-events-none select-none z-[1]"
+        aria-hidden="true"
+      >
         <motion.div
-          initial={{ scaleY: 0 }}
-          animate={{ scaleY: 1 }}
-          transition={{ duration: 1, delay: 1.4 }}
-          className="w-px h-24 bg-gradient-to-b from-transparent via-primary/15 to-transparent origin-top"
-        />
-      </div>
+          animate={{ y: [0, -9, 0] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+          className="w-10 h-10 md:w-14 md:h-14 text-white/[0.14]"
+        >
+          {shapes.accent}
+        </motion.div>
+      </motion.div>
     </>
   );
 };

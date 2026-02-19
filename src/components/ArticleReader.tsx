@@ -42,19 +42,36 @@ const ArticleReader = ({ sections, title }: ArticleReaderProps) => {
     utterance.rate = 0.95;
     utterance.pitch = 1;
 
-    const voices = window.speechSynthesis.getVoices();
-    const idVoice = voices.find((v) => v.lang.startsWith("id")) || voices.find((v) => v.lang.startsWith("ms"));
-    if (idVoice) utterance.voice = idVoice;
-
     utterance.onend = () => {
       setIsReading(false);
       setIsPaused(false);
     };
 
+    utterance.onerror = () => {
+      setIsReading(false);
+      setIsPaused(false);
+    };
+
     utteranceRef.current = utterance;
+
+    const doSpeak = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const idVoice =
+        voices.find((v) => v.lang.startsWith("id")) ||
+        voices.find((v) => v.lang.startsWith("ms"));
+      if (idVoice) utterance.voice = idVoice;
+      window.speechSynthesis.speak(utterance);
+    };
+
     setIsReading(true);
     setIsPaused(false);
-    window.speechSynthesis.speak(utterance);
+
+    // Chrome loads voices asynchronously — wait for voiceschanged if not yet ready
+    if (window.speechSynthesis.getVoices().length > 0) {
+      doSpeak();
+    } else {
+      window.speechSynthesis.addEventListener("voiceschanged", doSpeak, { once: true });
+    }
   }, [sections]);
 
   const handlePause = () => {

@@ -163,14 +163,13 @@ const ArticleDetail = () => {
   return (
     <main className="min-h-screen bg-background">
       <ArticleNavbar />
-      <ArticleDecoration era={article.era} />
 
       {/* ── Hero Image ───────────────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="relative h-72 md:h-96 w-full overflow-hidden mt-14"
+        className="relative h-80 md:h-[28rem] w-full overflow-hidden mt-14"
       >
         <ArticleImage
           src={heroSrc}
@@ -180,8 +179,11 @@ const ArticleDetail = () => {
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
+        {/* Era-specific decorative shapes — lives inside hero's relative container */}
+        <ArticleDecoration era={article.era} />
+
         {/* Era badge overlay */}
-        <div className="absolute bottom-6 left-6">
+        <div className="absolute bottom-6 left-6 z-[2]">
           <span className={`text-xs px-3 py-1 rounded-full font-body ${eraColors[article.era] || "bg-muted text-muted-foreground"}`}>
             {article.era}
           </span>
