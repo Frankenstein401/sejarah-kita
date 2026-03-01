@@ -125,11 +125,11 @@ const ArticleDecoration = ({ era, containerRef }: ArticleDecorationProps) => {
         initial={{ opacity: 0, scale: 1.2, x: 30 }}
         animate={{ opacity: 1, scale: 1, x: 0 }}
         transition={{ duration: 1.6, ease: "easeOut", delay: 0.2 }}
-        style={{ y: bgY, rotate: bgRotate, scale: bgScale }}
+        style={{ y: bgY, rotate: bgRotate, scale: bgScale, mixBlendMode: "soft-light" }}
         className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none select-none z-[1]"
         aria-hidden="true"
       >
-        <div className="w-52 h-52 md:w-72 md:h-72 text-white/[0.06]">
+        <div className="w-52 h-52 md:w-72 md:h-72 text-white/[0.18]">
           {shapes.bg}
         </div>
       </motion.div>
@@ -139,14 +139,14 @@ const ArticleDecoration = ({ era, containerRef }: ArticleDecorationProps) => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.2, ease: "easeOut", delay: 0.5 }}
-        style={{ y: accentY }}
+        style={{ y: accentY, mixBlendMode: "soft-light" }}
         className="absolute left-8 md:left-20 bottom-20 md:bottom-24 pointer-events-none select-none z-[1]"
         aria-hidden="true"
       >
         <motion.div
           animate={{ y: [0, -9, 0] }}
           transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-10 h-10 md:w-14 md:h-14 text-white/[0.14]"
+          className="w-10 h-10 md:w-14 md:h-14 text-white/[0.22]"
         >
           {shapes.accent}
         </motion.div>

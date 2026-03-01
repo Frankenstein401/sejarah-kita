@@ -1,8 +1,8 @@
 import { useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, BookOpen, Clock, ChevronRight, ImageOff } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, BookOpen, Clock, ChevronRight, ImageOff, Play, X } from "lucide-react";
 import ArticleReader from "@/components/ArticleReader";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getArticleBySlug, getRelatedArticles } from "@/data/articles";
 import { getQuizBySlug } from "@/data/quizzes";
 import ArticleQuiz from "@/components/ArticleQuiz";
@@ -10,8 +10,84 @@ import ReadingProgressBar from "@/components/ReadingProgressBar";
 import BackToTop from "@/components/BackToTop";
 import FunFactToast from "@/components/FunFactToast";
 import FooterSection from "@/components/FooterSection";
-import ArticleDecoration from "@/components/ArticleDecoration";
 import ArticleDiscussion from "@/components/ArticleDiscussion";
+
+// Data video YouTube per artikel — ganti ID dengan video yang sesuai
+const articleVideos: Record<string, { id: string; title: string; channel?: string }[]> = {
+  "kerajaan-kutai": [
+    {
+      id: "YHj8W0XZAR0",
+      title: "Kerajaan Kutai — Kerajaan Hindu Tertua di Indonesia",
+      channel: "Sejarah Indonesia",
+    },
+  ],
+  "kerajaan-sriwijaya": [
+    {
+      id: "2JzFxRqWLkM",
+      title: "Kerajaan Sriwijaya — Kemaharajaan Maritim Nusantara",
+      channel: "Sejarah Indonesia",
+    },
+  ],
+  "kerajaan-tarumanagara": [
+    {
+      id: "XKCK6O6YVPU",
+      title: "Kerajaan Tarumanagara — Kerajaan Hindu di Jawa Barat",
+      channel: "Sejarah Indonesia",
+    },
+  ],
+  "kerajaan-majapahit": [
+    {
+      id: "m_NMpS3YBSE",
+      title: "Kerajaan Majapahit — Kejayaan Nusantara",
+      channel: "Sejarah Indonesia",
+    },
+    {
+      id: "0V8gPj_Vbpk",
+      title: "Gajah Mada dan Sumpah Palapa",
+      channel: "Dokumenter Sejarah",
+    },
+  ],
+  "kesultanan-demak": [
+    {
+      id: "tSCrZfVGP3k",
+      title: "Kesultanan Demak — Kerajaan Islam Pertama di Jawa",
+      channel: "Sejarah Indonesia",
+    },
+  ],
+  "perlawanan-kolonialisme": [
+    {
+      id: "PCYjVLOzBGs",
+      title: "Perlawanan Rakyat Indonesia Melawan Kolonialisme",
+      channel: "Sejarah Indonesia",
+    },
+  ],
+  "kebangkitan-nasional": [
+    {
+      id: "YNjEsPl7K3s",
+      title: "Kebangkitan Nasional Indonesia — Lahirnya Pergerakan",
+      channel: "Sejarah Indonesia",
+    },
+  ],
+  "proklamasi-kemerdekaan": [
+    {
+      id: "fCGMOCwMsZU",
+      title: "Proklamasi Kemerdekaan Indonesia 17 Agustus 1945",
+      channel: "Sejarah Indonesia",
+    },
+    {
+      id: "QaJZAGMSZwY",
+      title: "Detik-Detik Proklamasi Kemerdekaan RI",
+      channel: "Dokumenter Sejarah",
+    },
+  ],
+  "borobudur": [
+    {
+      id: "U0WV0V8DaGI",
+      title: "Candi Borobudur — Keajaiban Dunia dari Nusantara",
+      channel: "Warisan Budaya",
+    },
+  ],
+};
 
 const articleImages: Record<string, { hero: string; sections: Record<number, string> }> = {
   "kerajaan-kutai": {
@@ -138,6 +214,14 @@ const ArticleNavbar = () => (
 const ArticleDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const article = getArticleBySlug(slug || "");
+  const [videoOpen, setVideoOpen] = useState(false);
+
+  // Close modal on Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setVideoOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   if (!article) {
     return (
@@ -159,6 +243,7 @@ const ArticleDetail = () => {
   const images = articleImages[article.slug];
   const heroSrc =
     images?.hero || eraFallback[article.era] || "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Borobudur-Nothwest-view.jpg/1280px-Borobudur-Nothwest-view.jpg";
+  const hasVideo = !!articleVideos[article.slug];
 
   return (
     <main className="min-h-screen bg-background">
@@ -169,7 +254,10 @@ const ArticleDetail = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="relative h-80 md:h-[28rem] w-full overflow-hidden mt-14"
+        className={`relative h-80 md:h-[28rem] w-full overflow-hidden mt-14 ${hasVideo ? "cursor-pointer group" : ""}`}
+        onClick={() => hasVideo && setVideoOpen(true)}
+        role={hasVideo ? "button" : undefined}
+        aria-label={hasVideo ? `Tonton video: ${article.title}` : undefined}
       >
         <ArticleImage
           src={heroSrc}
@@ -179,16 +267,78 @@ const ArticleDetail = () => {
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
-        {/* Era-specific decorative shapes — lives inside hero's relative container */}
-        <ArticleDecoration era={article.era} />
-
         {/* Era badge overlay */}
         <div className="absolute bottom-6 left-6 z-[2]">
           <span className={`text-xs px-3 py-1 rounded-full font-body ${eraColors[article.era] || "bg-muted text-muted-foreground"}`}>
             {article.era}
           </span>
         </div>
+
+        {/* Video badge — bottom right, subtle */}
+        {hasVideo && (
+          <div className="absolute bottom-6 right-6 z-[2]">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 group-hover:bg-primary/80 backdrop-blur-sm border border-white/20 text-white text-xs font-body transition-colors duration-300">
+              <Play className="w-3 h-3" fill="currentColor" />
+              Tonton Video
+            </span>
+          </div>
+        )}
       </motion.div>
+
+      {/* ── Video Modal ──────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {videoOpen && hasVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setVideoOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl bg-black"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setVideoOpen(false)}
+                className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/90 flex items-center justify-center transition-colors"
+                aria-label="Tutup video"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+
+              {/* YouTube embed */}
+              <div className="aspect-video">
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${articleVideos[article.slug][0].id}?autoplay=1&rel=0&modestbranding=1`}
+                  title={articleVideos[article.slug][0].title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+              </div>
+
+              {/* Video title bar */}
+              <div className="px-4 py-3 bg-card">
+                <p className="font-body text-sm font-semibold text-foreground line-clamp-1">
+                  {articleVideos[article.slug][0].title}
+                </p>
+                {articleVideos[article.slug][0].channel && (
+                  <p className="font-body text-xs text-muted-foreground mt-0.5">
+                    {articleVideos[article.slug][0].channel}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Article Header ───────────────────────────────────────────── */}
       <section className="pb-10 px-6">

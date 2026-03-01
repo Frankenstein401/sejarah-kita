@@ -27,7 +27,7 @@ const thumbs: Record<string, string> = {
   "kesultanan-demak": "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=70",
   "perlawanan-kolonialisme": "https://images.unsplash.com/photo-1461360228754-6e81c478b882?w=600&q=70",
   "kebangkitan-nasional": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=70",
-  "proklamasi-kemerdekaan": "https://images.unsplash.com/photo-1530277453888-c78fb77a5e3d?w=600&q=70",
+  "proklamasi-kemerdekaan": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=70",
   "borobudur": "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?w=600&q=70",
 };
 

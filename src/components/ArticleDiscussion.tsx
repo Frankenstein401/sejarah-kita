@@ -1,6 +1,28 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, User } from "lucide-react";
+import { MessageCircle, Send, User, AlertTriangle } from "lucide-react";
+
+// Daftar kata kasar bahasa Indonesia yang difilter
+const PROFANITY = [
+  "anjing","anjir","anjrit","bangsat","babi","bajingan","keparat","goblok",
+  "tolol","kampret","brengsek","sialan","monyet","ngentot","jancok","jancuk",
+  "jancik","asu","taik","tai","kontol","memek","puki","lonte","pelacur",
+  "sundal","titit","pepek","ngentod","entot","cok","cuk","dancok","dancuk",
+  "kimak","pantek","pukimak","bedebah","setan","iblis","brengsek","celeng",
+];
+
+const filterProfanity = (text: string): { filtered: string; hasProfanity: boolean } => {
+  let result = text;
+  let hasProfanity = false;
+  PROFANITY.forEach((word) => {
+    const regex = new RegExp(`(?<![a-z])${word}(?![a-z])`, "gi");
+    if (regex.test(result)) {
+      hasProfanity = true;
+      result = result.replace(regex, "*".repeat(word.length));
+    }
+  });
+  return { filtered: result, hasProfanity };
+};
 
 interface Comment {
   id: string;
@@ -20,6 +42,7 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [profanityWarning, setProfanityWarning] = useState(false);
 
   useEffect(() => {
     try {
@@ -37,16 +60,24 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
     const trimMsg = message.trim();
     if (!trimName || !trimMsg) return;
 
+    const { filtered: filteredMsg, hasProfanity } = filterProfanity(trimMsg);
+    const { filtered: filteredName } = filterProfanity(trimName);
+
+    if (hasProfanity) setProfanityWarning(true);
+    else setProfanityWarning(false);
+
     const newComment: Comment = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      name: trimName,
-      message: trimMsg,
+      name: filteredName,
+      message: filteredMsg,
       timestamp: Date.now(),
     };
 
     const updated = [newComment, ...comments];
     setComments(updated);
     localStorage.setItem(STORAGE_KEY(slug), JSON.stringify(updated));
+    // Bug fix: reset kedua field setelah submit
+    setName("");
     setMessage("");
   };
 
@@ -101,6 +132,21 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
             <Send className="w-3.5 h-3.5" />
             Kirim
           </button>
+
+          {/* Warning kata kasar */}
+          <AnimatePresence>
+            {profanityWarning && (
+              <motion.p
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="flex items-center gap-1.5 text-xs font-body text-amber-600 dark:text-amber-400"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                Komentar mengandung kata tidak pantas dan telah disensor otomatis.
+              </motion.p>
+            )}
+          </AnimatePresence>
         </form>
 
         {/* Comments */}
