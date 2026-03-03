@@ -1,14 +1,22 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { HelpCircle, Users, TrendingUp, Plus } from "lucide-react";
+import { HelpCircle, Users, TrendingUp, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { dummyQuizStats } from "@/data/admin-dummy";
 
+const ITEMS_PER_PAGE = 6;
+
 export default function AdminQuizzes() {
+  const [currentPage, setCurrentPage] = useState(1);
+
   const totalAttempts = dummyQuizStats.reduce((s, q) => s + q.attempts, 0);
   const avgAllScore = Math.round(dummyQuizStats.reduce((s, q) => s + q.avgScore, 0) / dummyQuizStats.length);
+
+  const totalPages = Math.ceil(dummyQuizStats.length / ITEMS_PER_PAGE);
+  const paginated = dummyQuizStats.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -61,7 +69,7 @@ export default function AdminQuizzes() {
 
       {/* Quiz list */}
       <div className="grid gap-4">
-        {dummyQuizStats.map((quiz, i) => (
+        {paginated.map((quiz, i) => (
           <motion.div
             key={quiz.title}
             initial={{ opacity: 0, x: -10 }}
@@ -94,6 +102,45 @@ export default function AdminQuizzes() {
           </motion.div>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-sm text-muted-foreground">
+            Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, dummyQuizStats.length)} dari {dummyQuizStats.length} kuis
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={page === currentPage ? "default" : "outline"}
+                size="icon"
+                className={`h-8 w-8 text-sm ${page === currentPage ? "bg-primary text-primary-foreground" : ""}`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

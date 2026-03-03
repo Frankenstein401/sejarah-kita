@@ -54,12 +54,12 @@ const FunFactToast = () => {
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 80, scale: 0.9 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed bottom-20 right-6 z-50 max-w-xs bg-card border border-border rounded-xl shadow-xl overflow-hidden"
+          className="fixed bottom-16 right-3 z-50 w-[240px] sm:w-auto sm:max-w-xs sm:bottom-20 sm:right-6 bg-card border border-border rounded-xl shadow-xl overflow-hidden"
         >
           {/* Gold top strip */}
           <div className="h-[3px] bg-gradient-to-r from-[hsl(36,80%,50%)] to-[hsl(40,70%,65%)]" />
 
-          <div className="p-4">
+          <div className="p-3 sm:p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
@@ -79,7 +79,7 @@ const FunFactToast = () => {
             </div>
 
             {/* Fact text */}
-            <p className="font-body text-sm text-foreground leading-relaxed">
+            <p className="font-body text-xs sm:text-sm text-foreground leading-relaxed">
               {fact}
             </p>
 

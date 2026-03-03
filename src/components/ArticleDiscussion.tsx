@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, User, AlertTriangle, Reply, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageCircle, Send, User, AlertTriangle, Reply, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
+
+const COMMENTS_PER_PAGE = 5;
 
 // Daftar kata kasar bahasa Indonesia yang difilter
 const PROFANITY = [
@@ -219,6 +221,7 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [profanityWarning, setProfanityWarning] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     try {
@@ -228,6 +231,7 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
     } catch {
       setComments([]);
     }
+    setCurrentPage(1);
   }, [slug]);
 
   const saveComments = (updated: Comment[]) => {
@@ -257,6 +261,7 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
     };
 
     saveComments([newComment, ...comments]);
+    setCurrentPage(1);
     setName("");
     setMessage("");
   };
@@ -351,15 +356,62 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
           <p className="text-muted-foreground font-body text-sm text-center py-8">
             Belum ada komentar. Jadilah yang pertama berdiskusi!
           </p>
-        ) : (
-          <div className="space-y-4">
-            <AnimatePresence initial={false}>
-              {comments.map((c) => (
-                <CommentItem key={c.id} comment={c} onReply={addReply} />
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
+        ) : (() => {
+          const totalPages = Math.ceil(comments.length / COMMENTS_PER_PAGE);
+          const paginated = comments.slice(
+            (currentPage - 1) * COMMENTS_PER_PAGE,
+            currentPage * COMMENTS_PER_PAGE
+          );
+          return (
+            <>
+              <div className="space-y-4">
+                <AnimatePresence initial={false}>
+                  {paginated.map((c) => (
+                    <CommentItem key={c.id} comment={c} onReply={addReply} />
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-body text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Sebelumnya
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 rounded-lg text-sm font-body transition-colors ${
+                          page === currentPage
+                            ? "bg-primary text-primary-foreground font-semibold"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-body text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Berikutnya
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
     </section>
   );

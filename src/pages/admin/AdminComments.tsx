@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, X, AlertTriangle, MessageSquare, Search, Filter } from "lucide-react";
+import { Check, X, AlertTriangle, MessageSquare, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,16 +15,24 @@ const statusConfig: Record<Status, { label: string; class: string }> = {
   flagged: { label: "Ditandai", class: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 
+const ITEMS_PER_PAGE = 8;
+
 export default function AdminComments() {
   const [filter, setFilter] = useState<Status | "all">("all");
   const [search, setSearch] = useState("");
   const [comments, setComments] = useState(recentComments);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => { setCurrentPage(1); }, [filter, search]);
 
   const filtered = comments.filter((c) => {
     const matchFilter = filter === "all" || c.status === filter;
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.message.toLowerCase().includes(search.toLowerCase());
     return matchFilter && matchSearch;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const counts = {
     all: comments.length,
@@ -71,7 +79,7 @@ export default function AdminComments() {
 
       {/* Comments list */}
       <div className="space-y-3">
-        {filtered.map((comment, i) => (
+        {paginated.map((comment, i) => (
           <motion.div
             key={comment.id}
             initial={{ opacity: 0, y: 8 }}
@@ -126,6 +134,45 @@ export default function AdminComments() {
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-sm text-muted-foreground">
+            Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} dari {filtered.length} komentar
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={page === currentPage ? "default" : "outline"}
+                size="icon"
+                className={`h-8 w-8 text-sm ${page === currentPage ? "bg-primary text-primary-foreground" : ""}`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

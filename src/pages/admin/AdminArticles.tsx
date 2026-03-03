@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Edit2, Trash2, Eye, MoreVertical } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Search, Edit2, Trash2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,14 +15,22 @@ const eraColors: Record<string, string> = {
   "Pergerakan Nasional": "bg-muted text-muted-foreground border-border",
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminArticles() {
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => { setCurrentPage(1); }, [search]);
 
   const filtered = articles.filter(
     (a) =>
       a.title.toLowerCase().includes(search.toLowerCase()) ||
       a.era.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -62,7 +70,7 @@ export default function AdminArticles() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((article, i) => (
+                {paginated.map((article, i) => (
                   <motion.tr
                     key={article.slug}
                     initial={{ opacity: 0 }}
@@ -101,6 +109,44 @@ export default function AdminArticles() {
           </div>
           {filtered.length === 0 && (
             <div className="py-12 text-center text-muted-foreground text-sm">Tidak ada artikel ditemukan.</div>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} dari {filtered.length} artikel
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="icon"
+                    className={`h-8 w-8 text-sm ${page === currentPage ? "bg-primary text-primary-foreground" : ""}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
