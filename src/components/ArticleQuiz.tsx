@@ -1,20 +1,24 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, XCircle, RotateCcw, Trophy, BookOpen, ArrowRight, Brain } from "lucide-react";
-import type { Quiz } from "@/data/quizzes";
+import { CheckCircle2, XCircle, RotateCcw, Trophy, BookOpen, ArrowRight, Brain, Loader2 } from "lucide-react";
+import { useUserActions } from "@/hooks/use-user-actions";
 
 interface ArticleQuizProps {
-  quiz: Quiz;
+  slug: string;
+  quiz: any;
   articleTitle: string;
 }
 
-const ArticleQuiz = ({ quiz, articleTitle }: ArticleQuizProps) => {
+const ArticleQuiz = ({ slug, quiz, articleTitle }: ArticleQuizProps) => {
   const [started, setStarted] = useState(false);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(quiz.questions.length).fill(null));
   const [finished, setFinished] = useState(false);
+  const [startTime, setStartTime] = useState<number>(0);
+  
+  const { submitQuiz, isSubmittingQuiz } = useUserActions();
 
   // Reset quiz state when quiz (article) changes
   useEffect(() => {
@@ -27,15 +31,24 @@ const ArticleQuiz = ({ quiz, articleTitle }: ArticleQuizProps) => {
   }, [quiz]);
 
   const q = quiz.questions[current];
-  const isCorrect = selected === q.correctIndex;
+  const qCorrectIndex = q.correctIndex !== undefined ? q.correctIndex : q.correct_index;
+  const isCorrect = selected === qCorrectIndex;
   const total = quiz.questions.length;
 
   const score = useMemo(() => {
-    if (!finished) return 0;
-    return answers.reduce<number>((acc, a, i) => acc + (a === quiz.questions[i].correctIndex ? 1 : 0), 0);
-  }, [finished, answers, quiz.questions]);
+    return answers.reduce<number>((acc, a, i) => {
+      const question = quiz.questions[i];
+      const correctIdx = question.correctIndex !== undefined ? question.correctIndex : question.correct_index;
+      return acc + (a === correctIdx ? 1 : 0);
+    }, 0);
+  }, [answers, quiz.questions]);
 
   const percentage = Math.round((score / total) * 100);
+
+  const handleStart = () => {
+    setStarted(true);
+    setStartTime(Date.now());
+  };
 
   const handleConfirm = () => {
     setConfirmed(true);
@@ -44,13 +57,17 @@ const ArticleQuiz = ({ quiz, articleTitle }: ArticleQuizProps) => {
     setAnswers(newAnswers);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (current < total - 1) {
       setCurrent(current + 1);
       setSelected(null);
       setConfirmed(false);
     } else {
       setFinished(true);
+      const timeSeconds = Math.round((Date.now() - startTime) / 1000);
+      try {
+        await submitQuiz({ slug, score, total, timeSeconds });
+      } catch (err) {}
     }
   };
 
@@ -141,29 +158,30 @@ const ArticleQuiz = ({ quiz, articleTitle }: ArticleQuizProps) => {
         {/* Review answers */}
         <div className="p-6 space-y-3 max-h-96 overflow-y-auto">
           <p className="font-display text-sm font-semibold text-foreground tracking-widest uppercase mb-2">Pembahasan</p>
-          {quiz.questions.map((question, i) => {
-            const wasCorrect = answers[i] === question.correctIndex;
-            return (
-              <div key={i} className={`p-3 rounded-lg border ${wasCorrect ? "border-primary/30 bg-primary/5" : "border-accent/30 bg-accent/5"}`}>
-                <div className="flex items-start gap-2">
-                  {wasCorrect ? (
-                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" />
-                  )}
-                  <div>
-                    <p className="font-body text-sm font-medium text-foreground">{i + 1}. {question.question}</p>
-                    {!wasCorrect && (
-                      <p className="font-body text-xs text-accent mt-1">
-                        Jawabanmu: {question.options[answers[i] ?? 0]}
-                      </p>
+            {quiz.questions.map((question, i) => {
+              const qCorrectIndex = question.correctIndex !== undefined ? question.correctIndex : question.correct_index;
+              const wasCorrect = answers[i] === qCorrectIndex;
+              return (
+                <div key={i} className={`p-3 rounded-lg border ${wasCorrect ? "border-primary/30 bg-primary/5" : "border-accent/30 bg-accent/5"}`}>
+                  <div className="flex items-start gap-2">
+                    {wasCorrect ? (
+                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" />
                     )}
-                    <p className="font-body text-xs text-muted-foreground mt-1">{question.explanation}</p>
+                    <div>
+                      <p className="font-body text-sm font-medium text-foreground">{i + 1}. {question.question}</p>
+                      {!wasCorrect && (
+                        <p className="font-body text-xs text-accent mt-1">
+                          Jawabanmu: {question.options[answers[i] ?? 0]}
+                        </p>
+                      )}
+                      <p className="font-body text-xs text-muted-foreground mt-1">{question.explanation}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
 
         {/* Retry */}
@@ -227,7 +245,8 @@ const ArticleQuiz = ({ quiz, articleTitle }: ArticleQuizProps) => {
           <div className="space-y-2.5">
             {q.options.map((option, i) => {
               const isSelected = selected === i;
-              const isAnswer = i === q.correctIndex;
+              const qCorrectIndex = q.correctIndex !== undefined ? q.correctIndex : q.correct_index;
+              const isAnswer = i === qCorrectIndex;
               let style = "border-border hover:border-primary/40 hover:bg-primary/5";
 
               if (confirmed) {

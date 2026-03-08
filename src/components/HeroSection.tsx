@@ -1,8 +1,17 @@
 import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-history.jpg";
 import { BookOpen, Clock, MapPin } from "lucide-react";
+import { usePublicStats } from "@/hooks/use-home";
 
 const HeroSection = () => {
+  const { data: stats } = usePublicStats();
+
+  const features = [
+    { icon: BookOpen, label: `${stats?.total_articles || 12}+ Materi` },
+    { icon: Clock, label: `${stats?.years_covered || 1700} Tahun` },
+    { icon: MapPin, label: "Seluruh Nusantara" },
+  ];
+
   return (
     <section className="relative h-screen min-h-[600px] overflow-hidden">
       <img
@@ -44,11 +53,7 @@ const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="flex flex-wrap gap-6 mt-10"
         >
-          {[
-            { icon: BookOpen, label: "12+ Materi" },
-            { icon: Clock, label: "Ribuan Tahun" },
-            { icon: MapPin, label: "Seluruh Nusantara" },
-          ].map((item) => (
+          {features.map((item) => (
             <div key={item.label} className="flex items-center gap-2 text-parchment/70">
               <item.icon className="w-4 h-4 text-gold" />
               <span className="text-sm font-body">{item.label}</span>

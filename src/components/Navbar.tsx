@@ -1,14 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Menu, X } from "lucide-react";
+import { BookOpen, Menu, X, LogIn, User, LogOut, LayoutDashboard } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth();
   const isHome = location.pathname === "/";
 
   useEffect(() => {
@@ -65,71 +76,128 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
-        <Link to="/" className="flex items-center gap-2">
-          <BookOpen className={`w-5 h-5 ${showSolid ? "text-primary" : "text-gold"}`} />
-          <span className={`font-display font-bold text-lg ${showSolid ? "text-foreground" : "text-parchment"}`}>
-            SejarahKita
-          </span>
-        </Link>
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-2">
+            <BookOpen className={`w-5 h-5 ${showSolid ? "text-primary" : "text-gold"}`} />
+            <span className={`font-display font-bold text-lg ${showSolid ? "text-foreground" : "text-parchment"}`}>
+              SejarahKita
+            </span>
+          </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          {links.map((link) => {
-            const isHash = link.path.includes("#");
-            const isActive = link.path === location.pathname || (link.path === "/" && location.pathname === "/");
-            return isHash ? (
-              <button
-                key={link.name}
-                onClick={() => handleNavClick(link.path)}
-                className={`font-body text-sm transition-colors relative group ${
-                  showSolid
-                    ? "text-muted-foreground hover:text-foreground"
-                    : "text-parchment/70 hover:text-parchment"
-                }`}
-              >
-                {link.name}
-                <span className={`absolute -bottom-1 left-0 right-0 h-0.5 ${showSolid ? "bg-foreground" : "bg-parchment"} scale-x-0 group-hover:scale-x-100 transition-transform origin-left`} />
-              </button>
-            ) : (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`font-body text-sm transition-colors relative group ${
-                  showSolid
-                    ? "text-muted-foreground hover:text-foreground"
-                    : "text-parchment/70 hover:text-parchment"
-                } ${isActive ? "text-primary font-semibold" : ""}`}
-              >
-                {link.name}
-                {isActive && (
-                  <motion.div
-                    layoutId="navbar-indicator"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-                <span className={`absolute -bottom-1 left-0 right-0 h-0.5 ${showSolid ? "bg-foreground" : "bg-parchment"} scale-x-0 group-hover:scale-x-100 transition-transform origin-left`} />
-              </Link>
-            );
-          })}
+          <div className="hidden md:flex items-center gap-8">
+            {links.map((link) => {
+              const isHash = link.path.includes("#");
+              const isActive = link.path === location.pathname || (link.path === "/" && location.pathname === "/");
+              return isHash ? (
+                <button
+                  key={link.name}
+                  onClick={() => handleNavClick(link.path)}
+                  className={`font-body text-sm transition-colors relative group ${
+                    showSolid
+                      ? "text-muted-foreground hover:text-foreground"
+                      : "text-parchment/70 hover:text-parchment"
+                  }`}
+                >
+                  {link.name}
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                </button>
+              ) : (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className={`font-body text-sm transition-colors relative group ${
+                    showSolid
+                      ? "text-muted-foreground hover:text-foreground"
+                      : "text-parchment/70 hover:text-parchment"
+                  } ${isActive ? "text-primary font-semibold" : ""}`}
+                >
+                  {link.name}
+                  {isActive && (
+                    <motion.div
+                      layoutId="navbar-indicator"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Mobile menu button */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className={`md:hidden w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-            mobileOpen
-              ? "bg-card text-foreground"
-              : showSolid
-                ? "text-foreground"
-                : "text-parchment"
-          }`}
-        >
-          {mobileOpen ? (
-            <X className="w-5 h-5" />
+        <div className="flex items-center gap-4">
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="relative h-9 w-9 rounded-full overflow-hidden border border-border focus:outline-none hover:opacity-80 transition-opacity">
+                  <Avatar className="h-full w-full">
+                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                      {user?.name?.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {user?.role === 'admin' && (
+                  <DropdownMenuItem onClick={() => navigate("/admin")}>
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    <span>Dashboard Admin</span>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => navigate("/profil")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profil Saya</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-red-500 focus:text-red-500">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Keluar</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <Menu className="w-5 h-5" />
+            <Link 
+              to="/login"
+              className={`hidden md:flex items-center gap-2 font-body text-xs font-bold uppercase tracking-wider px-5 py-2 rounded-full border transition-all hover:bg-white hover:text-primary hover:border-primary ${
+                showSolid
+                  ? "border-primary text-primary"
+                  : "border-parchment/30 text-parchment"
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              Masuk
+            </Link>
           )}
-        </button>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className={`md:hidden w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+              mobileOpen
+                ? "bg-card text-foreground"
+                : showSolid
+                  ? "text-foreground"
+                  : "text-parchment"
+            }`}
+          >
+            {mobileOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu - speech bubble / cloud design */}
@@ -193,6 +261,39 @@ const Navbar = () => {
                     </motion.div>
                   );
                 })}
+                
+                <div className="h-px bg-border my-2" />
+                
+                {isAuthenticated ? (
+                   <motion.button
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: links.length * 0.05 }}
+                    onClick={() => {
+                      logout();
+                      setMobileOpen(false);
+                    }}
+                    className="w-full text-left font-body text-sm text-red-500 hover:bg-red-50 px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Keluar
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: links.length * 0.05 }}
+                  >
+                    <Link
+                      to="/login"
+                      className="flex items-center gap-2 font-body text-sm text-primary font-semibold bg-primary/10 px-3 py-2.5 rounded-lg"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <LogIn className="w-4 h-4" />
+                      Masuk ke Akun
+                    </Link>
+                  </motion.div>
+                )}
               </div>
             </div>
 

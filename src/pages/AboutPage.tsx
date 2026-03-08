@@ -5,6 +5,7 @@ import { BookOpen, Target, Users, Sparkles, Landmark, Heart, Globe } from "lucid
 import Navbar from "@/components/Navbar";
 import FooterSection from "@/components/FooterSection";
 import EyangKu from "@/components/EyangKu";
+import { usePublicStats } from "@/hooks/use-home";
 
 // ─── SVG Wayang Components ──────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ const WayangFigure = ({ className, flip }: { className?: string; flip?: boolean 
     {/* Neck */}
     <rect x="45" y="59" width="10" height="14" rx="4" />
     {/* Body / Torso */}
-    <path d="M38 73 Q36 105 35 132 Q34 142 40 148 L60 148 Q66 142 65 132 Q64 105 62 73 Q56 67 50 67 Q44 67 38 73Z" />
+    <path d="M38 73 Q36 105 35 132 Q34 142 40 148 L60 148 Q66 142 65 132 Q64 105 62 73 Q56 67 50 67 Q44 67 38 73Z" />  
     {/* Decorative body details */}
     <ellipse cx="50" cy="100" rx="6" ry="4" opacity="0.1" fill="white" />
     <rect x="48" y="115" width="4" height="20" rx="2" opacity="0.08" fill="white" />
@@ -94,7 +95,7 @@ const CloudMotif = ({ className }: { className?: string }) => (
 
 // ─── Animated Counter ───────────────────────────────────────────────────
 
-const AnimatedCounter = ({ end, duration = 2, suffix = "" }: { end: number; duration?: number; suffix?: string }) => {
+const AnimatedCounter = ({ end, duration = 2, suffix = "" }: { end: number; duration?: number; suffix?: string }) => { 
   const [count, setCount] = useState(0);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
@@ -130,6 +131,8 @@ const AnimatedCounter = ({ end, duration = 2, suffix = "" }: { end: number; dura
 // ─── Main Page Component ────────────────────────────────────────────────
 
 const AboutPage = () => {
+  const { data: publicStats } = usePublicStats();
+
   // Wayang section parallax
   const wayangRef = useRef<HTMLElement>(null);
   const { scrollYProgress: wayangProgress } = useScroll({
@@ -162,9 +165,9 @@ const AboutPage = () => {
   const floatRotate = useTransform(pageProgress, [0, 1], [0, 360]);
 
   const stats = [
-    { label: "Artikel Sejarah", value: 77, suffix: "+" },
-    { label: "Tahun Tercakup", value: 1700, suffix: "+" },
-    { label: "Era Peradaban", value: 6, suffix: "" },
+    { label: "Artikel Sejarah", value: publicStats?.total_articles || 77, suffix: "+" },
+    { label: "Tahun Tercakup", value: publicStats?.years_covered || 1700, suffix: "+" },
+    { label: "Era Peradaban", value: publicStats?.total_eras || 6, suffix: "" },
   ];
 
   const missions = [
@@ -197,7 +200,7 @@ const AboutPage = () => {
     {
       icon: Heart,
       title: "Identitas Bangsa",
-      desc: "Memahami perjalanan bangsa adalah kunci membentuk generasi berkarakter yang mencintai tanah airnya.",
+      desc: "Memahami perjalanan bangsa adalah kunci membentuk generasi berkarakter yang mencintai tanah airnya.",     
     },
     {
       icon: Globe,
@@ -265,7 +268,7 @@ const AboutPage = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-muted-foreground font-body text-lg md:text-xl max-w-2xl mx-auto leading-relaxed"
           >
-            Platform pembelajaran sejarah Indonesia yang menggabungkan teknologi modern dengan konten berkualitas,
+            Platform pembelajaran sejarah Indonesia yang menggabungkan teknologi modern dengan konten berkualitas,     
             dirancang untuk membuat sejarah lebih mudah dipahami dan menyenangkan.
           </motion.p>
         </div>
@@ -323,7 +326,7 @@ const AboutPage = () => {
                   y: -8,
                   transition: { duration: 0.3 }
                 }}
-                className="group relative bg-card border border-border rounded-xl p-8 overflow-hidden cursor-pointer"
+                className="group relative bg-card border border-border rounded-xl p-8 overflow-hidden cursor-pointer"  
               >
                 <motion.div
                   initial={{ opacity: 0, scale: 0 }}
@@ -356,19 +359,17 @@ const AboutPage = () => {
 
       {/* ══════════════════════════════════════════════════════════════════
           ── WAYANG CULTURE PARALLAX SECTION ──
-          Replaces the old Tech Stack section with an immersive,
-          culturally-rich experience featuring wayang shadow puppets
           ══════════════════════════════════════════════════════════════════ */}
       <section
         ref={wayangRef}
         className="relative py-32 md:py-40 px-6 overflow-hidden"
         style={{ background: "linear-gradient(180deg, hsl(35 30% 12%) 0%, hsl(30 25% 8%) 50%, hsl(25 20% 10%) 100%)" }}
       >
-        {/* Blencong glow — the warm oil lamp light behind the kelir screen */}
+        {/* Blencong glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[radial-gradient(ellipse,hsl(36,80%,50%,0.15)_0%,transparent_70%)] pointer-events-none" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[radial-gradient(ellipse,hsl(36,70%,45%,0.08)_0%,transparent_70%)] pointer-events-none" />
 
-        {/* ── Gunungan — Center top, the sacred Tree of Life ── */}
+        {/* ── Gunungan ── */}
         <motion.div
           style={{ y: gununganY, rotate: gununganRotate, scale: gununganScale }}
           className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-none"
@@ -393,40 +394,17 @@ const AboutPage = () => {
         </motion.div>
 
         {/* ── Floating ornamental elements ── */}
-        <motion.div
-          style={{ rotate: ornament1Rotate }}
-          className="absolute top-16 left-[15%] pointer-events-none"
-        >
+        <motion.div style={{ rotate: ornament1Rotate }} className="absolute top-16 left-[15%] pointer-events-none">
           <WajikOrnament className="w-8 md:w-12 h-auto text-[hsl(36,60%,50%)] opacity-20" />
         </motion.div>
-
-        <motion.div
-          style={{ rotate: ornament2Rotate }}
-          className="absolute bottom-20 right-[18%] pointer-events-none"
-        >
+        <motion.div style={{ rotate: ornament2Rotate }} className="absolute bottom-20 right-[18%] pointer-events-none">
           <WajikOrnament className="w-10 md:w-14 h-auto text-[hsl(36,50%,40%)] opacity-15" />
         </motion.div>
-
-        <motion.div
-          style={{ y: ornament3Y }}
-          className="absolute top-1/3 left-[8%] pointer-events-none hidden md:block"
-        >
+        <motion.div style={{ y: ornament3Y }} className="absolute top-1/3 left-[8%] pointer-events-none hidden md:block">
           <CloudMotif className="w-20 h-auto text-[hsl(36,40%,35%)] opacity-10" />
         </motion.div>
-
-        <motion.div
-          style={{ y: ornament4Y, x: cloudX }}
-          className="absolute bottom-1/3 right-[5%] pointer-events-none hidden md:block"
-        >
+        <motion.div style={{ y: ornament4Y, x: cloudX }} className="absolute bottom-1/3 right-[5%] pointer-events-none hidden md:block">
           <CloudMotif className="w-24 h-auto text-[hsl(36,40%,35%)] opacity-10 scale-x-[-1]" />
-        </motion.div>
-
-        {/* Small gunungan bottom */}
-        <motion.div
-          style={{ y: ornament4Y, rotate: ornament2Rotate }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none"
-        >
-          <Gunungan className="w-14 md:w-20 h-auto text-[hsl(36,70%,45%)] opacity-20 rotate-180" />
         </motion.div>
 
         {/* ── Content ── */}
@@ -440,7 +418,7 @@ const AboutPage = () => {
             <p className="text-[hsl(36,80%,60%)] font-body text-sm tracking-[0.25em] uppercase mb-4">
               Lebih Dari Sekedar Website
             </p>
-            <h2 className="font-display text-4xl md:text-6xl font-bold text-[hsl(40,30%,90%)] leading-tight mb-6">
+            <h2 className="font-display text-4xl md:text-6xl font-bold text-[hsl(40,30%,90%)] leading-tight mb-6">     
               Warisan Budaya
               <br />
               <span className="text-[hsl(36,80%,55%)]">Nusantara</span>
@@ -452,14 +430,13 @@ const AboutPage = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-[hsl(35,15%,65%)] font-body text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-16"
+            className="text-[hsl(35,15%,65%)] font-body text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-16"    
           >
             Seperti dalang yang menghidupkan cerita melalui wayang, kami menghidupkan
             kembali kisah-kisah peradaban Nusantara melalui sentuhan digital — agar
             warisan nenek moyang terus hidup di hati generasi penerus.
           </motion.p>
 
-          {/* Budaya value cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {budayaCards.map((card, i) => (
               <motion.div

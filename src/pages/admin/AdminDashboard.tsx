@@ -1,55 +1,81 @@
 import { motion } from "framer-motion";
-import { Users, Eye, FileText, MessageSquare, Clock, TrendingUp, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import {
+  Users, Eye, FileText, MessageSquare, HelpCircle, Clock,
+  ArrowUpRight, Loader2, AlertCircle, CheckCircle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { visitorData, topArticles, trafficSources, statsOverview, deviceData } from "@/data/admin-dummy";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
+import { Badge } from "@/components/ui/badge";
+import { useAdminStats } from "@/hooks/use-admin";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell,
+} from "recharts";
 
-const COLORS = [
+const ERA_COLORS = [
   "hsl(36, 80%, 50%)",
-  "hsl(150, 30%, 25%)",
+  "hsl(150, 30%, 35%)",
   "hsl(15, 60%, 45%)",
-  "hsl(25, 20%, 40%)",
+  "hsl(25, 50%, 50%)",
+  "hsl(0, 65%, 48%)",
 ];
 
-const statCards = [
-  { label: "Total Pengunjung", value: statsOverview.totalVisitors.toLocaleString(), icon: Users, change: "+12.5%", up: true },
-  { label: "Total Page Views", value: statsOverview.totalPageViews.toLocaleString(), icon: Eye, change: "+8.3%", up: true },
-  { label: "Total Artikel", value: statsOverview.totalArticles.toString(), icon: FileText, change: "+2", up: true },
-  { label: "Total Komentar", value: statsOverview.totalComments.toString(), icon: MessageSquare, change: "-3.1%", up: false },
-];
-
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-};
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
+const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
 
 export default function AdminDashboard() {
+  const { data, isLoading, isError } = useAdminStats();
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground font-body">Memuat statistik...</p>
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <AlertCircle className="w-10 h-10 text-destructive" />
+        <p className="text-muted-foreground font-body">Gagal memuat data. Pastikan API berjalan.</p>
+      </div>
+    );
+  }
+
+  const stats = data.stats ?? {};
+  const topArticles: any[] = data.topArticles ?? [];
+  const articlesPerEra: any[] = data.articlesPerEra ?? [];
+  const recentComments: any[] = data.recentComments ?? [];
+
+  const statCards = [
+    { label: "Total Tampilan", value: (stats.totalViews ?? 0).toLocaleString(), icon: Eye, color: "text-primary" },
+    { label: "Total Artikel", value: (stats.totalArticles ?? 0).toString(), icon: FileText, color: "text-secondary" },
+    { label: "Pengguna Terdaftar", value: (stats.totalUsers ?? 0).toString(), icon: Users, color: "text-accent" },
+    { label: "Total Komentar", value: (stats.totalComments ?? 0).toString(), icon: MessageSquare, color: "text-primary" },
+    { label: "Kuis Dikerjakan", value: (stats.totalQuizAttempts ?? 0).toString(), icon: HelpCircle, color: "text-secondary" },
+    { label: "Menunggu Moderasi", value: (stats.pendingComments ?? 0).toString(), icon: Clock, color: "text-destructive" },
+  ];
+
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* Page title */}
+      {/* Title */}
       <motion.div variants={item}>
         <h1 className="font-display text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Ringkasan performa website SejarahKita</p>
+        <p className="text-sm text-muted-foreground mt-1">Data real-time dari database SejarahKita</p>
       </motion.div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map((stat) => (
           <motion.div key={stat.label} variants={item}>
             <Card className="border-border">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <stat.icon className="w-4 h-4 text-primary" />
+                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
                   </div>
-                  <span className={`text-xs font-medium flex items-center gap-0.5 ${stat.up ? "text-secondary" : "text-destructive"}`}>
-                    {stat.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                    {stat.change}
-                  </span>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/30" />
                 </div>
                 <p className="text-2xl font-bold text-foreground">{stat.value}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
@@ -61,66 +87,94 @@ export default function AdminDashboard() {
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Area chart - visitors */}
+        {/* Bar chart — views per era */}
         <motion.div variants={item} className="lg:col-span-2">
           <Card className="border-border">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-body font-semibold">Trafik Pengunjung</CardTitle>
+              <CardTitle className="text-sm font-body font-semibold">Tampilan per Era (dari database)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={visitorData}>
-                    <defs>
-                      <linearGradient id="gradVisitors" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(36, 80%, 50%)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(36, 80%, 50%)" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gradPageViews" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(150, 30%, 25%)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(150, 30%, 25%)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 20%, 85%)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(25, 10%, 45%)" />
-                    <YAxis tick={{ fontSize: 11 }} stroke="hsl(25, 10%, 45%)" />
-                    <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12, border: "1px solid hsl(35,20%,85%)" }} />
-                    <Area type="monotone" dataKey="visitors" stroke="hsl(36, 80%, 50%)" fill="url(#gradVisitors)" strokeWidth={2} name="Pengunjung" />
-                    <Area type="monotone" dataKey="pageViews" stroke="hsl(150, 30%, 25%)" fill="url(#gradPageViews)" strokeWidth={2} name="Page Views" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              {articlesPerEra.length === 0 ? (
+                <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">
+                  Belum ada data tampilan
+                </div>
+              ) : (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={articlesPerEra} margin={{ left: -10 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(35,20%,88%)" />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 10 }}
+                        stroke="hsl(25,10%,50%)"
+                        tickFormatter={(v: string) => v.split(" ").pop() ?? v}
+                      />
+                      <YAxis tick={{ fontSize: 11 }} stroke="hsl(25,10%,50%)" />
+                      <Tooltip
+                        contentStyle={{ borderRadius: 8, fontSize: 12, border: "1px solid hsl(35,20%,85%)" }}
+                        formatter={(v: number, name: string) => [
+                          v.toLocaleString(),
+                          name === "views" ? "Tampilan" : "Artikel",
+                        ]}
+                      />
+                      <Bar dataKey="views" name="views" radius={[4, 4, 0, 0]} barSize={32}>
+                        {articlesPerEra.map((_: any, i: number) => (
+                          <Cell key={i} fill={ERA_COLORS[i % ERA_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Pie chart - traffic sources */}
+        {/* Pie chart — article count per era */}
         <motion.div variants={item}>
           <Card className="border-border h-full">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-body font-semibold">Sumber Trafik</CardTitle>
+              <CardTitle className="text-sm font-body font-semibold">Distribusi Artikel per Era</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={trafficSources} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value">
-                      {trafficSources.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => `${v}%`} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex flex-wrap gap-3 mt-2">
-                {trafficSources.map((s, i) => (
-                  <div key={s.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                    {s.name} ({s.value}%)
+              {articlesPerEra.length === 0 ? (
+                <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
+                  Belum ada data
+                </div>
+              ) : (
+                <>
+                  <div className="h-44">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={articlesPerEra}
+                          dataKey="articles"
+                          nameKey="name"
+                          cx="50%" cy="50%"
+                          innerRadius={38} outerRadius={64}
+                          paddingAngle={4}
+                        >
+                          {articlesPerEra.map((_: any, i: number) => (
+                            <Cell key={i} fill={ERA_COLORS[i % ERA_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(v: number) => [`${v} artikel`]}
+                          contentStyle={{ borderRadius: 8, fontSize: 12 }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
-              </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {articlesPerEra.map((e: any, i: number) => (
+                      <div key={e.slug ?? i} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ERA_COLORS[i % ERA_COLORS.length] }} />
+                        {(e.name as string).split(" ").pop()} ({e.articles})
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -135,44 +189,67 @@ export default function AdminDashboard() {
               <CardTitle className="text-sm font-body font-semibold">Artikel Terpopuler</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {topArticles.map((a, i) => (
-                  <div key={a.slug} className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
+              {topArticles.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">Belum ada data tampilan artikel</p>
+              ) : (
+                <div className="space-y-3">
+                  {topArticles.map((a: any, i: number) => (
+                    <div key={a.id} className="flex items-center gap-3">
+                      <span
+                        className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: ERA_COLORS[i % ERA_COLORS.length] + "20", color: ERA_COLORS[i % ERA_COLORS.length] }}
+                      >
+                        {i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
+                        <p className="text-[10px] text-muted-foreground">{a.era}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground font-medium shrink-0">
+                        {(a.views ?? 0).toLocaleString()} views
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground font-medium">{a.views.toLocaleString()} views</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Device breakdown */}
+        {/* Recent comments */}
         <motion.div variants={item}>
           <Card className="border-border">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-body font-semibold">Perangkat Pengunjung</CardTitle>
+              <CardTitle className="text-sm font-body font-semibold">Diskusi Terbaru</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={deviceData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 20%, 85%)" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(25, 10%, 45%)" />
-                    <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(25, 10%, 45%)" width={60} />
-                    <Tooltip formatter={(v: number) => `${v}%`} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-                    <Bar dataKey="value" fill="hsl(36, 80%, 50%)" radius={[0, 6, 6, 0]} barSize={24} name="Persentase" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex items-center gap-2 mt-3">
-                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Rata-rata waktu: <strong className="text-foreground">{statsOverview.avgTimeOnSite}</strong></span>
-                <span className="text-xs text-muted-foreground ml-4">Bounce rate: <strong className="text-foreground">{statsOverview.bounceRate}</strong></span>
-              </div>
+              {recentComments.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">Belum ada diskusi</p>
+              ) : (
+                <div className="space-y-3">
+                  {recentComments.map((c: any) => (
+                    <div key={c.id} className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                        {(c.user as string)?.charAt(0)?.toUpperCase() ?? "?"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                          <span className="text-xs font-semibold text-foreground">{c.user}</span>
+                          {c.is_approved ? (
+                            <CheckCircle className="w-3 h-3 text-secondary" />
+                          ) : (
+                            <Badge variant="outline" className="text-[9px] h-4 bg-amber-50 text-amber-600 border-amber-200 px-1">
+                              Pending
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate">"{c.message}"</p>
+                        <p className="text-[10px] text-muted-foreground/50 mt-0.5">{c.article} · {c.created_at}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

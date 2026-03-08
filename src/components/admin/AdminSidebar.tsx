@@ -1,4 +1,4 @@
-import { BarChart3, FileText, HelpCircle, MessageSquare, Home, Settings, LogOut, ChevronLeft } from "lucide-react";
+import { BarChart3, FileText, HelpCircle, MessageSquare, Home, Settings, LogOut, ChevronLeft, Map } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -19,6 +19,7 @@ const mainNav = [
   { title: "Artikel", url: "/admin/articles", icon: FileText },
   { title: "Kuis", url: "/admin/quizzes", icon: HelpCircle },
   { title: "Komentar", url: "/admin/comments", icon: MessageSquare },
+  { title: "Peta Sejarah", url: "/admin/map", icon: Map },
 ];
 
 const secondaryNav = [

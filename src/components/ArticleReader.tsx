@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";   
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, Pause, Play } from "lucide-react";
+import { Volume2, VolumeX, Pause, Play } from "lucide-react";       
 
 interface ArticleReaderProps {
   sections: { heading: string; paragraphs: string[] }[];
@@ -40,13 +40,13 @@ const ArticleReader = ({ sections, title }: ArticleReaderProps) => {
   }, [title]);
 
   const handleStart = useCallback(() => {
+    if (!sections) return;
     const fullText = sections
-      .map((s) => `${s.heading}. ${s.paragraphs.join(". ")}`)
+      .map((s) => `${s.heading}. ${s.paragraphs?.join(". ")}`)
       .join(". ");
 
     window.speechSynthesis.cancel();
 
-    // Small delay to ensure cancel completes
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(fullText);
       utterance.lang = "id-ID";
@@ -124,11 +124,7 @@ const ArticleReader = ({ sections, title }: ArticleReaderProps) => {
               onClick={handlePause}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              {isPaused ? (
-                <Play className="w-3.5 h-3.5" />
-              ) : (
-                <Pause className="w-3.5 h-3.5" />
-              )}
+              {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={handleStop}
@@ -138,12 +134,8 @@ const ArticleReader = ({ sections, title }: ArticleReaderProps) => {
               <VolumeX className="w-3.5 h-3.5" />
             </button>
             <div className="ml-1">
-              <p className="text-xs font-body text-muted-foreground">
-                {isPaused ? "Dijeda" : "Membacakan"}
-              </p>
-              <p className="text-xs font-body text-foreground font-medium truncate max-w-[180px]">
-                {title}
-              </p>
+              <p className="text-xs font-body text-muted-foreground">{isPaused ? "Dijeda" : "Membacakan"}</p>
+              <p className="text-xs font-body text-foreground font-medium truncate max-w-[180px]">{title}</p>
             </div>
           </motion.div>
         )}

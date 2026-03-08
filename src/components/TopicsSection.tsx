@@ -1,56 +1,116 @@
 import { motion } from "framer-motion";
-import { Crown, Landmark, Sword, Flag, BookOpen, Users } from "lucide-react";
+import { Crown, Landmark, Sword, Flag, BookOpen, Users, Loader2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTopics } from "@/hooks/use-home";
 
-interface Topic {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  articles: number;
-}
+const iconMap: Record<string, React.ElementType> = {
+  crown: Crown,
+  temple: Landmark,
+  sword: Sword,
+  users: Users,
+  flag: Flag,
+  book: BookOpen,
+};
 
-const topics: Topic[] = [
-  {
-    icon: Crown,
-    title: "Kerajaan Hindu-Buddha",
-    description: "Kutai, Tarumanagara, Sriwijaya, Majapahit, dan kerajaan-kerajaan besar lainnya",
-    articles: 15,
-  },
-  {
-    icon: Landmark,
-    title: "Kesultanan Islam",
-    description: "Demak, Mataram Islam, Ternate, Tidore, Aceh, dan penyebaran Islam di Nusantara",
-    articles: 12,
-  },
-  {
-    icon: Sword,
-    title: "Perlawanan & Kolonialisme",
-    description: "Perjuangan melawan VOC dan pemerintah Hindia Belanda selama berabad-abad",
-    articles: 18,
-  },
-  {
-    icon: Users,
-    title: "Pergerakan Nasional",
-    description: "Budi Utomo, Sarekat Islam, Sumpah Pemuda, dan tokoh-tokoh pergerakan",
-    articles: 10,
-  },
-  {
-    icon: Flag,
-    title: "Kemerdekaan Indonesia",
-    description: "Proklamasi 1945, perang kemerdekaan, dan pembentukan negara Indonesia",
-    articles: 14,
-  },
-  {
-    icon: BookOpen,
-    title: "Warisan Budaya",
-    description: "Candi, prasasti, naskah kuno, dan peninggalan bersejarah Nusantara",
-    articles: 8,
-  },
-];
+const cardVariants = {
+  initial: { opacity: 0, y: 40, scale: 0.95 },
+  inView: { opacity: 1, y: 0, scale: 1 },
+  hover: { y: -12, scale: 1.02, transition: { duration: 0.3, ease: "easeOut" } },
+};
+
+const glowVariants = {
+  initial: { opacity: 0, scale: 0.5 },
+  hover: { opacity: 1, scale: 1.2, transition: { duration: 0.4, ease: "easeOut" } },
+};
+
+const shimmerVariants = {
+  initial: { x: "-100%", opacity: 0 },
+  hover: { x: "100%", opacity: 1, transition: { duration: 0.6, ease: "easeInOut" } },
+};
+
+const iconVariants = {
+  hover: { scale: 1.15, transition: { duration: 0.2, ease: "easeInOut" } },
+};
+
+const cornerVariants = {
+  initial: { scale: 0, opacity: 0 },
+  hover: { scale: 1, opacity: 1, transition: { duration: 0.25, ease: "easeOut" } },
+};
+
+
+const TopicCard = ({ topic, index }: { topic: any; index: number }) => {
+  const Icon = iconMap[topic.icon_name] || BookOpen;
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      initial="initial"
+      whileInView="inView"
+      whileHover="hover"
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+    >
+      <Link
+        to={`/artikel?era=${topic.era?.slug || topic.slug || ""}`}
+        className="relative group block p-8 rounded-2xl border border-border bg-card overflow-hidden h-full"
+        style={{ isolation: "isolate" }}
+      >
+        {/* Animated glow background */}
+        <motion.div
+          variants={glowVariants}
+          className="absolute inset-0 rounded-2xl bg-primary/8 pointer-events-none"
+        />
+
+        {/* Shimmer sweep */}
+        <motion.div
+          variants={shimmerVariants}
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent skew-x-12 pointer-events-none"
+        />
+
+        {/* Border glow */}
+        <motion.div
+          variants={glowVariants}
+          className="absolute inset-0 rounded-2xl ring-1 ring-primary/30 pointer-events-none"
+        />
+
+        {/* Corner accent */}
+        <motion.div
+          variants={cornerVariants}
+          className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-primary/20 to-transparent rounded-bl-3xl rounded-tr-2xl pointer-events-none"
+        />
+
+        {/* Icon */}
+        <div className="relative z-10 w-14 h-14 rounded-2xl bg-primary/10 group-hover:bg-primary/15 flex items-center justify-center mb-6 transition-colors duration-300 shadow-sm shadow-primary/10">
+          <motion.div variants={iconVariants}>
+            <Icon className="w-7 h-7 text-primary" />
+          </motion.div>
+        </div>
+
+        {/* Text content */}
+        <div className="relative z-10">
+          <h3 className="font-display text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
+            {topic.title}
+          </h3>
+          <p className="text-muted-foreground font-body text-sm leading-relaxed mb-4">
+            {topic.description}
+          </p>
+
+          {/* Article count as permanent CTA link */}
+          <div className="flex items-center gap-1 text-primary font-body text-sm font-semibold mt-auto pt-2">
+            {topic.articles_count !== undefined ? topic.articles_count : "—"} Artikel
+            <ArrowRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+};
 
 const TopicsSection = () => {
+  const { data: topics, isLoading } = useTopics();
+
   return (
-    <section className="py-24 px-6 bg-gradient-warm">
+    <section className="py-24 px-6 bg-gradient-warm" id="topics">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -58,7 +118,9 @@ const TopicsSection = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <p className="text-primary font-body text-sm tracking-[0.2em] uppercase mb-3">Topik Pembelajaran</p>
+          <p className="text-primary font-body text-sm tracking-[0.2em] uppercase mb-3">
+            Topik Pembelajaran
+          </p>
           <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground">
             Jelajahi Materi
           </h2>
@@ -67,97 +129,18 @@ const TopicsSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topics.map((topic, index) => (
-            <motion.div
-              key={topic.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <Link to="/artikel">
-                <motion.div
-                  whileHover={{ 
-                    y: -12,
-                    scale: 1.02,
-                    transition: { duration: 0.3, ease: "easeOut" }
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  className="relative group bg-card border border-border rounded-lg p-6 h-full overflow-hidden cursor-pointer"
-                >
-                  {/* Animated glow background on hover */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    whileHover={{ opacity: 1, scale: 1.2 }}
-                    transition={{ duration: 0.4 }}
-                    className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-terracotta/10 blur-xl"
-                  />
-
-                  {/* Shimmer effect */}
-                  <motion.div
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: "100%" }}
-                    transition={{ duration: 0.6, ease: "easeInOut" }}
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                  />
-
-                  {/* Border glow on hover */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute inset-0 rounded-lg border-2 border-primary/0 group-hover:border-primary/40"
-                  />
-
-                  <div className="relative z-10">
-                    {/* Icon with rotation animation */}
-                    <motion.div
-                      whileHover={{ rotate: 360, scale: 1.15 }}
-                      transition={{ duration: 0.6, ease: "easeInOut" }}
-                      className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 group-hover:shadow-lg group-hover:shadow-primary/20 transition-all"
-                    >
-                      <topic.icon className="w-6 h-6 text-primary" />
-                    </motion.div>
-
-                    {/* Title with color transition */}
-                    <h3 className="font-display text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
-                      {topic.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-muted-foreground font-body text-sm mt-2 leading-relaxed group-hover:text-foreground/80 transition-colors duration-300">
-                      {topic.description}
-                    </p>
-
-                    {/* Arrow with slide animation */}
-                    <div className="flex items-center gap-2 mt-4">
-                      <p className="text-primary font-body text-xs font-medium">
-                        {topic.articles} Artikel
-                      </p>
-                      <motion.span
-                        initial={{ x: 0 }}
-                        whileHover={{ x: 4 }}
-                        transition={{ duration: 0.3, repeat: Infinity, repeatType: "reverse" }}
-                        className="text-primary"
-                      >
-                        →
-                      </motion.span>
-                    </div>
-                  </div>
-
-                  {/* Corner accent */}
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    whileHover={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full"
-                  />
-                </motion.div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <p className="text-muted-foreground font-body text-sm">Memuat topik...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topics?.map((topic: any, index: number) => (
+              <TopicCard key={topic.id} topic={topic} index={index} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

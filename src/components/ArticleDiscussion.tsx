@@ -1,6 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, User, AlertTriangle, Reply, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageCircle, Send, User, AlertTriangle, Reply, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Loader2, LogIn } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
+import { useDiscussions, useCreateDiscussion, type Discussion } from "@/hooks/use-discussions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 const COMMENTS_PER_PAGE = 5;
 
@@ -26,22 +31,8 @@ const filterProfanity = (text: string): { filtered: string; hasProfanity: boolea
   return { filtered: result, hasProfanity };
 };
 
-interface Comment {
-  id: string;
-  name: string;
-  message: string;
-  timestamp: number;
-  replies?: Comment[];
-}
-
-interface ArticleDiscussionProps {
-  slug: string;
-  articleTitle: string;
-}
-
-const STORAGE_KEY = (slug: string) => `discussions_${slug}`;
-
-const formatTime = (ts: number) => {
+const formatTime = (dateStr: string) => {
+  const ts = new Date(dateStr).getTime();
   const now = Date.now();
   const diff = now - ts;
   if (diff < 60000) return "Baru saja";
@@ -52,17 +43,21 @@ const formatTime = (ts: number) => {
 };
 
 // Reply form component
-const ReplyForm = ({ onSubmit, onCancel }: { onSubmit: (name: string, message: string) => boolean; onCancel: () => void }) => {
-  const [name, setName] = useState("");
+const ReplyForm = ({ onSubmit, onCancel, isSubmitting }: { 
+  onSubmit: (message: string) => void; 
+  onCancel: () => void;
+  isSubmitting: boolean;
+}) => {
   const [message, setMessage] = useState("");
   const [warning, setWarning] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !message.trim()) return;
-    const hasProfanity = onSubmit(name.trim(), message.trim());
+    if (!message.trim()) return;
+    
+    const { filtered, hasProfanity } = filterProfanity(message.trim());
     setWarning(hasProfanity);
-    setName("");
+    onSubmit(filtered);
     setMessage("");
   };
 
@@ -74,14 +69,6 @@ const ReplyForm = ({ onSubmit, onCancel }: { onSubmit: (name: string, message: s
       onSubmit={handleSubmit}
       className="mt-3 ml-9 space-y-2"
     >
-      <input
-        type="text"
-        placeholder="Nama kamu"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        maxLength={50}
-        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-      />
       <textarea
         placeholder="Tulis balasan..."
         value={message}
@@ -93,10 +80,10 @@ const ReplyForm = ({ onSubmit, onCancel }: { onSubmit: (name: string, message: s
       <div className="flex items-center gap-2">
         <button
           type="submit"
-          disabled={!name.trim() || !message.trim()}
+          disabled={!message.trim() || isSubmitting}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-body text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <Send className="w-3 h-3" />
+          {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
           Balas
         </button>
         <button
@@ -128,14 +115,17 @@ const ReplyForm = ({ onSubmit, onCancel }: { onSubmit: (name: string, message: s
 const CommentItem = ({
   comment,
   onReply,
+  isSubmittingReply,
   depth = 0,
 }: {
-  comment: Comment;
-  onReply: (parentId: string, name: string, message: string) => boolean;
+  comment: Discussion;
+  onReply: (parentId: string, message: string) => void;
+  isSubmittingReply: boolean;
   depth?: number;
 }) => {
   const [replyOpen, setReplyOpen] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
+  const { isAuthenticated } = useAuth();
   const hasReplies = comment.replies && comment.replies.length > 0;
 
   return (
@@ -148,15 +138,18 @@ const CommentItem = ({
     >
       <div className={`rounded-xl border border-border bg-card p-4 ${depth > 0 ? "bg-muted/30" : ""}`}>
         <div className="flex items-center gap-2 mb-2">
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${depth > 0 ? "bg-accent/20" : "bg-primary/10"}`}>
-            <User className={`w-3.5 h-3.5 ${depth > 0 ? "text-accent-foreground" : "text-primary"}`} />
-          </div>
+          <Avatar className="w-7 h-7">
+            <AvatarImage src={comment.user.avatar} />
+            <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+              {comment.user.name.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <span className="font-body text-sm font-semibold text-foreground">
-            {comment.name}
+            {comment.user.name}
           </span>
           <span className="text-[10px] text-muted-foreground font-body">•</span>
           <span className="text-xs text-muted-foreground font-body ml-auto">
-            {formatTime(comment.timestamp)}
+            {formatTime(comment.created_at)}
           </span>
         </div>
         <p className="font-body text-sm text-foreground/85 leading-relaxed pl-9">
@@ -166,13 +159,15 @@ const CommentItem = ({
         {/* Reply button */}
         {depth < 2 && (
           <div className="pl-9 mt-2 flex items-center gap-3">
-            <button
-              onClick={() => setReplyOpen(!replyOpen)}
-              className="inline-flex items-center gap-1 text-xs font-body text-muted-foreground hover:text-primary transition-colors"
-            >
-              <Reply className="w-3 h-3" />
-              Balas
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => setReplyOpen(!replyOpen)}
+                className="inline-flex items-center gap-1 text-xs font-body text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Reply className="w-3 h-3" />
+                Balas
+              </button>
+            )}
             {hasReplies && (
               <button
                 onClick={() => setShowReplies(!showReplies)}
@@ -190,11 +185,11 @@ const CommentItem = ({
       <AnimatePresence>
         {replyOpen && (
           <ReplyForm
-            onSubmit={(name, message) => {
-              const result = onReply(comment.id, name, message);
+            isSubmitting={isSubmittingReply}
+            onSubmit={(message) => {
+              onReply(comment.id, message);
               setReplyOpen(false);
               setShowReplies(true);
-              return result;
             }}
             onCancel={() => setReplyOpen(false)}
           />
@@ -208,6 +203,7 @@ const CommentItem = ({
             key={reply.id}
             comment={reply}
             onReply={onReply}
+            isSubmittingReply={isSubmittingReply}
             depth={depth + 1}
           />
         ))}
@@ -216,82 +212,36 @@ const CommentItem = ({
   );
 };
 
-const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [name, setName] = useState("");
+const ArticleDiscussion = ({ slug }: { slug: string; articleTitle: string }) => {
+  const { user, isAuthenticated } = useAuth();
+  const { data: comments, isLoading } = useDiscussions(slug);
+  const { mutateAsync: createDiscussion, isPending } = useCreateDiscussion(slug);
+  
   const [message, setMessage] = useState("");
   const [profanityWarning, setProfanityWarning] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY(slug));
-      if (stored) setComments(JSON.parse(stored));
-      else setComments([]);
-    } catch {
-      setComments([]);
-    }
-    setCurrentPage(1);
-  }, [slug]);
-
-  const saveComments = (updated: Comment[]) => {
-    setComments(updated);
-    localStorage.setItem(STORAGE_KEY(slug), JSON.stringify(updated));
-  };
-
-  const totalCount = (list: Comment[]): number =>
+  const totalCount = (list: Discussion[]): number =>
     list.reduce((sum, c) => sum + 1 + (c.replies ? totalCount(c.replies) : 0), 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimName = name.trim();
     const trimMsg = message.trim();
-    if (!trimName || !trimMsg) return;
+    if (!trimMsg) return;
 
-    const { filtered: filteredMsg, hasProfanity } = filterProfanity(trimMsg);
-    const { filtered: filteredName } = filterProfanity(trimName);
+    const { filtered, hasProfanity } = filterProfanity(trimMsg);
     setProfanityWarning(hasProfanity);
 
-    const newComment: Comment = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      name: filteredName,
-      message: filteredMsg,
-      timestamp: Date.now(),
-      replies: [],
-    };
-
-    saveComments([newComment, ...comments]);
-    setCurrentPage(1);
-    setName("");
-    setMessage("");
+    try {
+      await createDiscussion({ message: filtered });
+      setMessage("");
+    } catch (err) {}
   };
 
-  // Add reply to a comment (recursive)
-  const addReply = (parentId: string, replyName: string, replyMsg: string): boolean => {
-    const { filtered: filteredMsg, hasProfanity } = filterProfanity(replyMsg);
-    const { filtered: filteredName } = filterProfanity(replyName);
-
-    const newReply: Comment = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      name: filteredName,
-      message: filteredMsg,
-      timestamp: Date.now(),
-      replies: [],
-    };
-
-    const insertReply = (list: Comment[]): Comment[] =>
-      list.map((c) => {
-        if (c.id === parentId) {
-          return { ...c, replies: [...(c.replies || []), newReply] };
-        }
-        if (c.replies && c.replies.length > 0) {
-          return { ...c, replies: insertReply(c.replies) };
-        }
-        return c;
-      });
-
-    saveComments(insertReply(comments));
-    return hasProfanity;
+  const handleReply = async (parentId: string, message: string) => {
+    try {
+      await createDiscussion({ message, parent_id: parentId });
+    } catch (err) {}
   };
 
   return (
@@ -302,7 +252,7 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
         <h3 className="font-display text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-primary" />
           Diskusi
-          {totalCount(comments) > 0 && (
+          {!isLoading && comments && comments.length > 0 && (
             <span className="text-sm font-body text-muted-foreground font-normal">
               ({totalCount(comments)})
             </span>
@@ -310,53 +260,74 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
         </h3>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="mb-8 space-y-3">
-          <input
-            type="text"
-            placeholder="Nama kamu"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={50}
-            className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-          <textarea
-            placeholder="Tulis komentar atau pertanyaan..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            maxLength={1000}
-            rows={3}
-            className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-          />
-          <button
-            type="submit"
-            disabled={!name.trim() || !message.trim()}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-body text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Send className="w-3.5 h-3.5" />
-            Kirim
-          </button>
+        {isAuthenticated ? (
+          <form onSubmit={handleSubmit} className="mb-8 space-y-3">
+            <div className="flex items-center gap-3 mb-2">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={user?.avatar} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                   {user?.name.substring(0,2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-body text-sm font-medium text-foreground">{user?.name}</span>
+            </div>
+            <textarea
+              placeholder="Tulis komentar atau pertanyaan..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              maxLength={1000}
+              rows={3}
+              className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+            />
+            <button
+              type="submit"
+              disabled={!message.trim() || isPending}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-body text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              Kirim
+            </button>
 
-          <AnimatePresence>
-            {profanityWarning && (
-              <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="flex items-center gap-1.5 text-xs font-body text-amber-600 dark:text-amber-400"
-              >
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                Komentar mengandung kata tidak pantas dan telah disensor otomatis.
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </form>
+            <AnimatePresence>
+              {profanityWarning && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="flex items-center gap-1.5 text-xs font-body text-amber-600 dark:text-amber-400"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  Komentar mengandung kata tidak pantas dan telah disensor otomatis.
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </form>
+        ) : (
+          <div className="mb-8 p-6 rounded-xl border border-dashed border-border bg-muted/30 text-center">
+             <p className="font-body text-sm text-muted-foreground mb-4">Masuk untuk ikut berdiskusi dan bertanya seputar sejarah.</p>
+             <Button variant="outline" size="sm" className="rounded-full" asChild>
+                <Link to="/login" className="flex items-center gap-2">
+                   <LogIn className="w-4 h-4" />
+                   Masuk Sekarang
+                </Link>
+             </Button>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="font-body text-xs">Memuat diskusi...</p>
+          </div>
+        )}
 
         {/* Comments */}
-        {comments.length === 0 ? (
+        {!isLoading && (!comments || comments.length === 0) ? (
           <p className="text-muted-foreground font-body text-sm text-center py-8">
             Belum ada komentar. Jadilah yang pertama berdiskusi!
           </p>
-        ) : (() => {
+        ) : !isLoading && comments ? (() => {
           const totalPages = Math.ceil(comments.length / COMMENTS_PER_PAGE);
           const paginated = comments.slice(
             (currentPage - 1) * COMMENTS_PER_PAGE,
@@ -367,7 +338,7 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
               <div className="space-y-4">
                 <AnimatePresence initial={false}>
                   {paginated.map((c) => (
-                    <CommentItem key={c.id} comment={c} onReply={addReply} />
+                    <CommentItem key={c.id} comment={c} onReply={handleReply} isSubmittingReply={isPending} />
                   ))}
                 </AnimatePresence>
               </div>
@@ -411,7 +382,7 @@ const ArticleDiscussion = ({ slug, articleTitle }: ArticleDiscussionProps) => {
               )}
             </>
           );
-        })()}
+        })() : null}
       </div>
     </section>
   );

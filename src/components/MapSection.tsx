@@ -1,263 +1,35 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, X, BookOpen, ArrowRight } from "lucide-react";
+import { MapPin, X, BookOpen, ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-interface MapLocation {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-  year: string;
-  era: string;
-  description: string;
-  articleSlug?: string;
-}
-
-const locations: MapLocation[] = [
-  {
-    id: "kutai",
-    name: "Kerajaan Kutai",
-    lat: -0.5,
-    lng: 117.15,
-    year: "Abad ke-4",
-    era: "Hindu-Buddha",
-    description: "Kerajaan Hindu tertua di Indonesia, terletak di tepi Sungai Mahakam, Kalimantan Timur.",
-    articleSlug: "kerajaan-kutai",
-  },
-  {
-    id: "tarumanagara",
-    name: "Kerajaan Tarumanagara",
-    lat: -6.6,
-    lng: 106.8,
-    year: "Abad ke-5",
-    era: "Hindu-Buddha",
-    description: "Kerajaan Hindu di Jawa Barat, dikenal lewat Prasasti Tugu dan jejak Raja Purnawarman.",
-    articleSlug: "kerajaan-tarumanagara",
-  },
-  {
-    id: "sriwijaya",
-    name: "Kerajaan Sriwijaya",
-    lat: -2.99,
-    lng: 104.76,
-    year: "Abad ke-7",
-    era: "Hindu-Buddha",
-    description: "Kerajaan maritim terbesar di Asia Tenggara, berpusat di Palembang.",
-    articleSlug: "kerajaan-sriwijaya",
-  },
-  {
-    id: "borobudur",
-    name: "Candi Borobudur",
-    lat: -7.608,
-    lng: 110.204,
-    year: "Abad ke-8",
-    era: "Hindu-Buddha",
-    description: "Candi Buddha terbesar di dunia, dibangun oleh Dinasti Syailendra di Magelang.",
-  },
-  {
-    id: "prambanan",
-    name: "Candi Prambanan",
-    lat: -7.752,
-    lng: 110.491,
-    year: "Abad ke-9",
-    era: "Hindu-Buddha",
-    description: "Kompleks candi Hindu terbesar di Indonesia, didedikasikan untuk Trimurti.",
-  },
-  {
-    id: "mataram-kuno",
-    name: "Kerajaan Mataram Kuno",
-    lat: -7.58,
-    lng: 110.42,
-    year: "Abad ke-8",
-    era: "Hindu-Buddha",
-    description: "Kerajaan besar di Jawa Tengah yang membangun Borobudur dan Prambanan.",
-  },
-  {
-    id: "kalingga",
-    name: "Kerajaan Kalingga",
-    lat: -6.73,
-    lng: 110.84,
-    year: "Abad ke-7",
-    era: "Hindu-Buddha",
-    description: "Kerajaan Buddha di Jawa Tengah, dipimpin oleh Ratu Shima yang terkenal adil.",
-  },
-  {
-    id: "majapahit",
-    name: "Kerajaan Majapahit",
-    lat: -7.615,
-    lng: 112.41,
-    year: "1293",
-    era: "Hindu-Buddha",
-    description: "Kerajaan terluas di Nusantara di bawah Gajah Mada, berpusat di Trowulan.",
-    articleSlug: "kerajaan-majapahit",
-  },
-  {
-    id: "singasari",
-    name: "Kerajaan Singasari",
-    lat: -7.89,
-    lng: 112.65,
-    year: "1222",
-    era: "Hindu-Buddha",
-    description: "Pendahulu Majapahit, didirikan oleh Ken Arok di Malang, Jawa Timur.",
-  },
-  {
-    id: "demak",
-    name: "Kesultanan Demak",
-    lat: -6.89,
-    lng: 110.64,
-    year: "Abad ke-15",
-    era: "Kesultanan",
-    description:
-      "Kesultanan Islam pertama di Pulau Jawa, didirikan oleh Raden Patah. Pusat penyebaran Islam dengan peran penting Wali Songo.",
-    articleSlug: "kesultanan-demak",
-  },
-  {
-    id: "ternate",
-    name: "Kesultanan Ternate",
-    lat: 0.78,
-    lng: 127.37,
-    year: "Abad ke-15",
-    era: "Kesultanan",
-    description: "Pusat perdagangan rempah cengkih dan pala yang menarik bangsa Eropa.",
-  },
-  {
-    id: "tidore",
-    name: "Kesultanan Tidore",
-    lat: 0.68,
-    lng: 127.45,
-    year: "Abad ke-15",
-    era: "Kesultanan",
-    description: "Rival Ternate dalam perdagangan rempah, bersekutu dengan Spanyol.",
-  },
-  {
-    id: "mataram-islam",
-    name: "Kesultanan Mataram Islam",
-    lat: -7.8,
-    lng: 110.36,
-    year: "1587",
-    era: "Kesultanan",
-    description: "Kesultanan terbesar di Jawa, mencapai puncak di bawah Sultan Agung.",
-  },
-  {
-    id: "aceh",
-    name: "Kesultanan Aceh",
-    lat: 5.55,
-    lng: 95.32,
-    year: "1496",
-    era: "Kesultanan",
-    description: "Kesultanan kuat di ujung Sumatera, pusat perdagangan lada dan Islam.",
-  },
-  {
-    id: "gowa",
-    name: "Kesultanan Gowa-Tallo",
-    lat: -5.13,
-    lng: 119.41,
-    year: "Abad ke-16",
-    era: "Kesultanan",
-    description: "Kesultanan maritim di Sulawesi Selatan, dipimpin Sultan Hasanuddin.",
-  },
-  {
-    id: "banten",
-    name: "Kesultanan Banten",
-    lat: -6.05,
-    lng: 106.15,
-    year: "1527",
-    era: "Kesultanan",
-    description: "Pusat perdagangan lada di ujung barat Jawa, melawan kolonialisme VOC.",
-  },
-  {
-    id: "diponegoro",
-    name: "Perang Diponegoro",
-    lat: -7.79,
-    lng: 110.36,
-    year: "1825-1830",
-    era: "Pergerakan",
-    description: "Perlawanan Pangeran Diponegoro melawan Belanda, perang terbesar di Jawa.",
-    articleSlug: "perlawanan-kolonialisme",
-  },
-  {
-    id: "budiutomo",
-    name: "Kebangkitan Nasional",
-    lat: -6.17,
-    lng: 106.85,
-    year: "1908",
-    era: "Pergerakan",
-    description: "Budi Utomo didirikan, organisasi modern pertama pergerakan nasional.",
-    articleSlug: "kebangkitan-nasional",
-  },
-  {
-    id: "sumpahpemuda",
-    name: "Sumpah Pemuda",
-    lat: -6.2,
-    lng: 106.83,
-    year: "1928",
-    era: "Pergerakan",
-    description:
-      "Kongres Pemuda II di Batavia menghasilkan ikrar satu tanah air, satu bangsa, dan satu bahasa: Indonesia.",
-    articleSlug: "kebangkitan-nasional",
-  },
-  {
-    id: "proklamasi",
-    name: "Proklamasi Kemerdekaan",
-    lat: -6.19,
-    lng: 106.84,
-    year: "1945",
-    era: "Kemerdekaan",
-    description: "Soekarno-Hatta memproklamasikan kemerdekaan pada 17 Agustus 1945.",
-    articleSlug: "proklamasi-kemerdekaan",
-  },
-  {
-    id: "bandung-lautan-api",
-    name: "Bandung Lautan Api",
-    lat: -6.91,
-    lng: 107.61,
-    year: "1946",
-    era: "Kemerdekaan",
-    description: "Rakyat Bandung membakar kota agar tidak dimanfaatkan Sekutu dan Belanda.",
-  },
-  {
-    id: "surabaya",
-    name: "Pertempuran Surabaya",
-    lat: -7.25,
-    lng: 112.75,
-    year: "1945",
-    era: "Kemerdekaan",
-    description: "Pertempuran heroik 10 November melawan Inggris, diperingati sebagai Hari Pahlawan.",
-  },
-  {
-    id: "serangan-umum",
-    name: "Serangan Umum 1 Maret",
-    lat: -7.8,
-    lng: 110.36,
-    year: "1949",
-    era: "Kemerdekaan",
-    description: "Serangan besar TNI di Yogyakarta membuktikan RI masih berdiri kepada dunia.",
-  },
-];
+import { useMapLocations } from "@/hooks/use-home";
 
 const eraColors: Record<string, string> = {
-  "Hindu-Buddha": "hsl(36, 80%, 50%)",
-  Kesultanan: "hsl(150, 30%, 25%)",
-  Pergerakan: "hsl(15, 60%, 45%)",
-  Kemerdekaan: "hsl(0, 70%, 50%)",
+  "hindu-buddha": "hsl(36, 80%, 50%)",
+  "kesultanan": "hsl(150, 30%, 25%)",
+  "kolonial": "hsl(15, 60%, 45%)",
+  "pergerakan": "hsl(15, 60%, 45%)",
+  "kemerdekaan": "hsl(0, 70%, 50%)",
 };
 
 const eraBadgeClass: Record<string, string> = {
-  "Hindu-Buddha": "bg-primary text-primary-foreground",
-  Kesultanan: "bg-secondary text-secondary-foreground",
-  Pergerakan: "bg-accent text-accent-foreground",
-  Kemerdekaan: "bg-destructive text-destructive-foreground",
+  "hindu-buddha": "bg-primary text-primary-foreground",
+  "kesultanan": "bg-secondary text-secondary-foreground",
+  "kolonial": "bg-accent text-accent-foreground",
+  "pergerakan": "bg-accent text-accent-foreground",
+  "kemerdekaan": "bg-destructive text-destructive-foreground",
 };
 
 const MapSection = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<L.Map | null>(null);
-  const [selected, setSelected] = useState<MapLocation | null>(null);
+  const [selected, setSelected] = useState<any | null>(null);
+  const { data: locations, isLoading } = useMapLocations();
 
   useEffect(() => {
-    if (!mapRef.current || leafletMap.current) return;
+    if (!mapRef.current || !locations || leafletMap.current) return;
 
     const map = L.map(mapRef.current, {
       center: [-2.5, 118],
@@ -277,8 +49,8 @@ const MapSection = () => {
 
     L.control.attribution({ position: "bottomright" }).addTo(map);
 
-    locations.forEach((loc) => {
-      const color = eraColors[loc.era] || "hsl(36,80%,50%)";
+    locations.forEach((loc: any) => {
+      const color = loc.color || eraColors[loc.era?.slug] || "hsl(36,80%,50%)";
 
       const icon = L.divIcon({
         className: "custom-map-marker",
@@ -297,7 +69,7 @@ const MapSection = () => {
         iconAnchor: [14, 14],
       });
 
-      const marker = L.marker([loc.lat, loc.lng], { icon }).addTo(map);
+      const marker = L.marker([loc.latitude, loc.longitude], { icon }).addTo(map);
 
       marker.bindTooltip(loc.name, {
         permanent: false,
@@ -317,7 +89,7 @@ const MapSection = () => {
       map.remove();
       leafletMap.current = null;
     };
-  }, []);
+  }, [locations]);
 
   return (
     <section className="py-24 px-6 bg-background relative" id="peta">
@@ -348,7 +120,7 @@ const MapSection = () => {
                 className="w-3 h-3 rounded-full border border-border"
                 style={{ background: color }}
               />
-              <span className="text-xs font-body text-muted-foreground">
+              <span className="text-xs font-body text-muted-foreground uppercase">
                 {era}
               </span>
             </div>
@@ -363,6 +135,11 @@ const MapSection = () => {
           transition={{ duration: 0.6 }}
           className="relative rounded-xl overflow-hidden border border-border shadow-lg"
         >
+          {isLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            </div>
+          )}
           <div
             ref={mapRef}
             className="w-full h-[450px] md:h-[550px] relative z-0"
@@ -385,7 +162,6 @@ const MapSection = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               onClick={(e) => e.stopPropagation()}
               className="bg-card border border-border rounded-xl max-w-sm w-full p-6 shadow-2xl relative"
             >
@@ -397,10 +173,8 @@ const MapSection = () => {
               </button>
 
               <div className="flex items-center gap-2 mb-3">
-                <span
-                  className={`text-xs px-2.5 py-0.5 rounded-full ${eraBadgeClass[selected.era] || "bg-primary text-primary-foreground"}`}
-                >
-                  {selected.era}
+                <span className={`text-xs px-2.5 py-0.5 rounded-full ${eraBadgeClass[selected.era?.slug] || "bg-primary text-primary-foreground"}`}>
+                  {selected.era?.name}
                 </span>
                 <span className="text-sm font-body text-muted-foreground">
                   {selected.year}
@@ -418,9 +192,9 @@ const MapSection = () => {
                 {selected.description}
               </p>
 
-              {selected.articleSlug && (
+              {selected.article_slug && (
                 <Link
-                  to={`/artikel/${selected.articleSlug}`}
+                  to={`/artikel/${selected.article_slug}`}
                   className="inline-flex items-center gap-2 text-sm font-body font-medium text-primary hover:text-primary/80 transition-colors"
                   onClick={() => setSelected(null)}
                 >
