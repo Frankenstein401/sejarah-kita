@@ -30,7 +30,7 @@ build_project:
 deploy_production:
   stage: deploy
   tags:
-    - $CI_RUN_ON
+    - prd-runner
   environment:
     name: production
   only:
@@ -50,7 +50,7 @@ deploy_production:
 deploy_development:
   stage: deploy
   tags:
-    - $CI_RUN_ON
+    - dev-runner
   environment:
     name: development
   only:
