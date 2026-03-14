@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Plus, Pencil, Trash2, Loader2, Clock, Upload, X, Link as LinkIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Clock, Upload, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,45 @@ import {
 } from "@/components/ui/select";
 import { useEras } from "@/hooks/use-articles";
 import {
-  useAdminTimeline, useCreateTimeline, useUpdateTimeline, useDeleteTimeline,
+  useAdminTimeline, useCreateTimeline, useUpdateTimeline, useDeleteTimeline, useUploadTimelineImage,
 } from "@/hooks/use-admin";
+
+function ImageUploadField({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const { mutateAsync: uploadImage, isPending: isUploading } = useUploadTimelineImage();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file);
+    onChange(url);
+    e.target.value = "";
+  };
+
+  return (
+    <div className="space-y-1.5">
+      {value && (
+        <div className="relative w-full h-28 rounded-lg overflow-hidden border bg-muted">
+          <img src={value} alt="preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+          <button type="button" onClick={() => onChange("")}
+            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors">
+            <X className="w-3.5 h-3.5 text-white" />
+          </button>
+        </div>
+      )}
+      <div className="flex gap-2">
+        <Input value={value} onChange={(e) => onChange(e.target.value)}
+          placeholder="https://... atau upload gambar" className="flex-1 text-sm" />
+        <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/jpg,image/webp" className="hidden" onChange={handleFile} />
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={isUploading}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-border bg-muted hover:bg-border text-sm transition-colors disabled:opacity-50 shrink-0">
+          {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+          {isUploading ? "Mengunggah..." : "Upload"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 type FormValues = {
   era_id: string;
@@ -173,8 +210,8 @@ export default function AdminTimeline() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>URL Gambar <span className="text-muted-foreground text-xs">(opsional)</span></Label>
-              <Input placeholder="https://..." {...register("image_url")} />
+              <Label>Foto <span className="text-muted-foreground text-xs">(opsional)</span></Label>
+              <ImageUploadField value={watch("image_url")} onChange={(url) => setValue("image_url", url)} />
             </div>
 
             <div className="space-y-1.5">
