@@ -1,0 +1,43 @@
+image: node:20-slim
+
+variables:
+  CI: "true"
+  WRANGLER_SEND_METRICS: "false"
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}-npm
+  paths:
+    - .npm/
+    - node_modules/
+
+stages:
+  - build
+  - deploy
+
+build_project:
+  stage: build
+  tags:
+    - $CI_RUN_ON
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+
+deploy_to_cloudflare:
+  stage: deploy
+  tags:
+    - $CI_RUN_ON
+  only:
+    - main
+  dependencies:
+    - build_project
+  script:
+    - echo "Deploying to Cloudflare Pages..."
+    - npx wrangler pages deploy dist --project-name=sejarah-kita --branch=main --commit-dirty=true
+  variables:
+    CLOUDFLARE_ACCOUNT_ID: $CLOUDFLARE_ACCOUNT_ID
+    CLOUDFLARE_API_TOKEN: $CLOUDFLARE_API_TOKEN
