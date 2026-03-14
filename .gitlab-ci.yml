@@ -3,12 +3,12 @@ image: node:20-slim
 variables:
   CI: "true"
   WRANGLER_SEND_METRICS: "false"
-  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  YARN_CACHE_FOLDER: "$CI_PROJECT_DIR/.yarn-cache"
 
 cache:
-  key: ${CI_COMMIT_REF_SLUG}-npm
+  key: ${CI_COMMIT_REF_SLUG}-yarn
   paths:
-    - .npm/
+    - .yarn-cache/
     - node_modules/
 
 stages:
@@ -20,8 +20,8 @@ build_project:
   tags:
     - prd-runner
   script:
-    - npm ci
-    - npm run build
+    - yarn install --frozen-lockfile
+    - yarn build
   artifacts:
     paths:
       - dist/
@@ -39,7 +39,7 @@ deploy_production:
     - build_project
   script:
     - echo "Deploying to Cloudflare Pages (production)..."
-    - npx wrangler pages deploy dist
+    - yarn wrangler pages deploy dist
       --project-name=$CI_CF_PROJECT_SLUG
       --branch=$CI_COMMIT_REF_NAME
       --commit-dirty=true
@@ -59,7 +59,7 @@ deploy_development:
     - build_project
   script:
     - echo "Deploying to Cloudflare Pages (development)..."
-    - npx wrangler pages deploy dist
+    - yarn wrangler pages deploy dist
       --project-name=$CI_CF_PROJECT_SLUG
       --branch=$CI_COMMIT_REF_NAME
       --commit-dirty=true
