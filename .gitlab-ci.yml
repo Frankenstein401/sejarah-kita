@@ -15,10 +15,30 @@ stages:
   - build
   - deploy
 
-build_project:
+build_production:
   stage: build
   tags:
     - prd-runner
+  environment:
+    name: production
+  only:
+    - main
+  script:
+    - yarn install --frozen-lockfile
+    - yarn build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+
+build_development:
+  stage: build
+  tags:
+    - dev-runner
+  environment:
+    name: development
+  only:
+    - development
   script:
     - yarn install --frozen-lockfile
     - yarn build
@@ -36,10 +56,10 @@ deploy_production:
   only:
     - main
   dependencies:
-    - build_project
+    - build_production
   script:
     - echo "Deploying to Cloudflare Pages (production)..."
-    - npx wrangler pages deploy dist
+    - yarn wrangler pages deploy dist
       --project-name=$CI_CF_PROJECT_SLUG
       --branch=$CI_COMMIT_REF_NAME
       --commit-dirty=true
@@ -56,10 +76,10 @@ deploy_development:
   only:
     - development
   dependencies:
-    - build_project
+    - build_development
   script:
     - echo "Deploying to Cloudflare Pages (development)..."
-    - npx wrangler pages deploy dist
+    - yarn wrangler pages deploy dist
       --project-name=$CI_CF_PROJECT_SLUG
       --branch=$CI_COMMIT_REF_NAME
       --commit-dirty=true
