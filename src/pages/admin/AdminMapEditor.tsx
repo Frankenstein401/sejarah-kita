@@ -263,7 +263,7 @@ export default function AdminMapEditor() {
           <p className="text-sm text-muted-foreground mt-0.5">{locations.length} lokasi terdaftar</p>
         </div>
         <Button
-          onClick={() => setAddMode(true)}
+          onClick={() => setAddMode(v => !v)}
           className="gap-2"
           variant={addMode ? "secondary" : "default"}
         >
