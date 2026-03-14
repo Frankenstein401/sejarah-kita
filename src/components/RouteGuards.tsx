@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useNavigationType } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
@@ -19,20 +19,10 @@ function Loading() {
   );
 }
 
-/**
- * Hanya tamu yang datang via klik tombol (PUSH).
- * Direct URL (POP) → redirect ke /.
- * Sudah login → redirect ke /.
- */
+/** Hanya tamu. Sudah login → redirect ke /. */
 export function GuestRoute() {
-  const navType = useNavigationType();
   const hasToken = !!localStorage.getItem("token");
   const stored = getStoredUser();
-
-  // Direct URL / reload → blokir
-  if (navType === "POP") return <Navigate to="/" replace />;
-
-  // Sudah login → redirect ke home
   if (hasToken && stored) return <Navigate to="/" replace />;
 
   const { user, isLoading } = useAuth();
@@ -42,7 +32,7 @@ export function GuestRoute() {
   return <Outlet />;
 }
 
-/** Wajib login. Kalau belum login → redirect ke /. */
+/** Wajib login. Belum login → redirect ke /. */
 export function ProtectedRoute() {
   const hasToken = !!localStorage.getItem("token");
   if (!hasToken) return <Navigate to="/" replace />;
@@ -54,7 +44,7 @@ export function ProtectedRoute() {
   return <Outlet />;
 }
 
-/** Wajib admin. Kalau bukan admin → redirect ke /. */
+/** Wajib admin. Bukan admin → redirect ke /. */
 export function AdminRoute() {
   const hasToken = !!localStorage.getItem("token");
   const stored = getStoredUser();
