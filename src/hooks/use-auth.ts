@@ -48,6 +48,7 @@ export const useAuth = () => {
     },
     onSuccess: (data) => {
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       queryClient.setQueryData(["auth-user"], data.user);
       toast.success(`Selamat datang kembali, ${data.user.name}!`);
     },
@@ -65,6 +66,7 @@ export const useAuth = () => {
     },
     onSuccess: (data) => {
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       queryClient.setQueryData(["auth-user"], data.user);
       toast.success("Akun berhasil dibuat! Selamat menjelajah.");
     },
@@ -77,6 +79,7 @@ export const useAuth = () => {
   // Logout mutation
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     queryClient.setQueryData(["auth-user"], null);
     apiClient.post("/auth/logout").catch(() => {}); // Fire and forget
     toast.info("Berhasil keluar.");
