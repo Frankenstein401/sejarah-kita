@@ -167,8 +167,9 @@ const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link 
+            <Link
               to="/login"
+              state={{ fromApp: true }}
               className={`hidden md:flex items-center gap-2 font-body text-xs font-bold uppercase tracking-wider px-5 py-2 rounded-full border transition-all hover:bg-white hover:text-primary hover:border-primary ${
                 showSolid
                   ? "border-primary text-primary"

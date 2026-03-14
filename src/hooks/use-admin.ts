@@ -88,11 +88,12 @@ export const useDeleteArticle = () => {
 
 // ─── Comments/Discussions ──────────────────────────────────────────────────
 
-export const useAdminComments = () => {
+export const useAdminComments = (search?: string) => {
   return useQuery({
-    queryKey: ["admin-comments"],
+    queryKey: ["admin-comments", search],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: any[] }>("/admin/discussions");
+      const params = search ? { search } : {};
+      const response = await apiClient.get<{ data: any[] }>("/admin/discussions", { params });
       return response.data.data;
     },
   });
