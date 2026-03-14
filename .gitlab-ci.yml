@@ -24,7 +24,6 @@ build_production:
   only:
     - main
   script:
-    - echo $VITE_API_URL # ← tambahin ini sementara buat debug
     - yarn install --frozen-lockfile
     - yarn build
   artifacts:
@@ -41,7 +40,6 @@ build_development:
   only:
     - development
   script:
-    - echo $VITE_API_URL # ← tambahin ini sementara buat debug
     - yarn install --frozen-lockfile
     - yarn build
   artifacts:
