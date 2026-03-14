@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Plus, Pencil, Trash2, Loader2, Clock } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, Pencil, Trash2, Loader2, Clock, Upload, X, Link as LinkIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

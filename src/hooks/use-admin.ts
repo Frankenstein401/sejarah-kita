@@ -289,6 +289,20 @@ export const useAdminTimeline = () => {
   });
 };
 
+export const useUploadTimelineImage = () => {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData();
+      form.append("image", file);
+      const response = await apiClient.post<{ url: string }>("/admin/timeline/upload-image", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data.url;
+    },
+    onError: () => toast.error("Gagal mengunggah gambar."),
+  });
+};
+
 export const useCreateTimeline = () => {
   const queryClient = useQueryClient();
   return useMutation({
