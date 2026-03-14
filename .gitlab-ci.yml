@@ -18,7 +18,7 @@ stages:
 build_project:
   stage: build
   tags:
-    - $CI_RUN_ON
+    - prd-runner
   script:
     - npm ci
     - npm run build
