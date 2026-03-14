@@ -1,13 +1,14 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth, useSendOtp, useVerifyOtp } from "@/hooks/use-auth";
+import { Turnstile } from "@marsidev/react-turnstile";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   BookOpen, ArrowLeft, ArrowRight, Loader2, Mail, Lock, User, Eye, EyeOff,
-  CheckCircle2, XCircle, Phone, GraduationCap, RefreshCw,
+  CheckCircle2, XCircle, Phone, GraduationCap,
 } from "lucide-react";
 
 function getStrength(p: string) {
@@ -28,102 +29,43 @@ const STATUS_OPTIONS = [
 ];
 
 const EDUCATION_OPTIONS = ["SD / Sederajat", "SMP / Sederajat", "SMA / Sederajat", "D3 / D4", "S1", "S2 / S3"];
-const STEPS = ["Info Diri", "Verifikasi Email", "Buat Password"];
+const STEPS = ["Info Diri", "Buat Password"];
 
-function OtpInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const refs = useRef<(HTMLInputElement | null)[]>([]);
-  const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? "");
-
-  const handleKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace") {
-      const next = digits.map((d, idx) => (idx === i ? "" : d)).join("");
-      onChange(next);
-      if (i > 0) refs.current[i - 1]?.focus();
-    }
-  };
-
-  const handleChange = (i: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const char = e.target.value.replace(/\D/g, "").slice(-1);
-    const next = digits.map((d, idx) => (idx === i ? char : d)).join("");
-    onChange(next);
-    if (char && i < 5) refs.current[i + 1]?.focus();
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    onChange(pasted.padEnd(6, ""));
-    refs.current[Math.min(pasted.length, 5)]?.focus();
-    e.preventDefault();
-  };
-
-  return (
-    <div className="flex gap-2 justify-center" onPaste={handlePaste}>
-      {digits.map((d, i) => (
-        <input
-          key={i}
-          ref={(el) => { refs.current[i] = el; }}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={d}
-          onChange={(e) => handleChange(i, e)}
-          onKeyDown={(e) => handleKey(i, e)}
-          className={`w-12 h-14 text-center text-xl font-bold rounded-xl border-2 bg-background outline-none transition-all ${
-            d ? "border-primary text-primary" : "border-border text-foreground"
-          } focus:border-primary focus:ring-2 focus:ring-primary/20`}
-        />
-      ))}
-    </div>
-  );
-}
+// Turnstile site key — ganti dengan key asli dari dash.cloudflare.com/turnstile
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(0);
   const [info, setInfo] = useState({ name: "", email: "", phone: "", status: "", education: "" });
-  const [otp, setOtp] = useState("");
-  const [resendTimer, setResendTimer] = useState(0);
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<{ reset: () => void }>(null);
 
   const { register, isRegistering } = useAuth();
-  const { mutateAsync: sendOtp, isPending: isSending } = useSendOtp();
-  const { mutateAsync: verifyOtp, isPending: isVerifying } = useVerifyOtp();
   const navigate = useNavigate();
 
   const strength = useMemo(() => getStrength(password), [password]);
   const passMatch = passwordConfirm.length > 0 && password === passwordConfirm;
   const passMismatch = passwordConfirm.length > 0 && password !== passwordConfirm;
 
-  useEffect(() => {
-    if (resendTimer <= 0) return;
-    const t = setTimeout(() => setResendTimer((n) => n - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendTimer]);
-
-  const handleInfoSubmit = async (e: React.FormEvent) => {
+  const handleInfoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try { await sendOtp(info.email); setStep(1); setResendTimer(60); } catch {}
-  };
-
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length < 6) return;
-    try { await verifyOtp({ email: info.email, code: otp }); setStep(2); } catch {}
+    setStep(1);
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passMismatch) return;
+    if (passMismatch || !captchaToken) return;
     try {
       await register({ ...info, password, password_confirmation: passwordConfirm });
       navigate("/");
-    } catch {}
-  };
-
-  const handleResend = async () => {
-    try { await sendOtp(info.email); setResendTimer(60); setOtp(""); } catch {}
+    } catch {
+      turnstileRef.current?.reset();
+      setCaptchaToken(null);
+    }
   };
 
   return (
@@ -181,11 +123,11 @@ export default function RegisterPage() {
           </div>
 
           <AnimatePresence mode="wait">
-            {/* ── Step 1 ── */}
+            {/* ── Step 1: Info Diri ── */}
             {step === 0 && (
               <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
                 <div className="mb-6">
-                  <p className="text-xs font-body text-primary font-semibold uppercase tracking-wider mb-1">Langkah 1 dari 3</p>
+                  <p className="text-xs font-body text-primary font-semibold uppercase tracking-wider mb-1">Langkah 1 dari 2</p>
                   <h1 className="font-display text-2xl font-bold">Info Diri</h1>
                   <p className="text-muted-foreground font-body text-sm mt-0.5">
                     Sudah punya akun?{" "}
@@ -253,61 +195,18 @@ export default function RegisterPage() {
                     </motion.div>
                   )}
                   <Button type="submit" className="w-full h-11 font-body font-semibold gap-2 mt-2"
-                    disabled={isSending || !info.name || !info.email || !info.status}>
-                    {isSending && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {isSending ? "Mengirim OTP..." : "Lanjut"}
-                    {!isSending && <ArrowRight className="w-4 h-4" />}
+                    disabled={!info.name || !info.email || !info.status}>
+                    Lanjut <ArrowRight className="w-4 h-4" />
                   </Button>
                 </form>
               </motion.div>
             )}
 
-            {/* ── Step 2 ── */}
+            {/* ── Step 2: Password + CAPTCHA ── */}
             {step === 1 && (
               <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
                 <div className="mb-6">
-                  <p className="text-xs font-body text-primary font-semibold uppercase tracking-wider mb-1">Langkah 2 dari 3</p>
-                  <h1 className="font-display text-2xl font-bold">Verifikasi Email</h1>
-                  <p className="text-muted-foreground font-body text-sm mt-0.5">
-                    Kode 6 digit dikirim ke{" "}
-                    <span className="text-foreground font-medium">{info.email}</span>
-                  </p>
-                </div>
-                <form onSubmit={handleOtpSubmit} className="space-y-6">
-                  <OtpInput value={otp} onChange={setOtp} />
-                  <div className="text-center">
-                    {resendTimer > 0 ? (
-                      <p className="text-sm text-muted-foreground font-body">
-                        Kirim ulang dalam <span className="text-foreground font-semibold">{resendTimer}s</span>
-                      </p>
-                    ) : (
-                      <button type="button" onClick={handleResend} disabled={isSending}
-                        className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-body disabled:opacity-50">
-                        <RefreshCw className="w-3.5 h-3.5" />
-                        {isSending ? "Mengirim..." : "Kirim ulang kode"}
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex gap-3">
-                    <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setStep(0)}>
-                      <ArrowLeft className="w-4 h-4 mr-1" /> Kembali
-                    </Button>
-                    <Button type="submit" className="flex-1 h-11 font-body font-semibold gap-2"
-                      disabled={isVerifying || otp.length < 6}>
-                      {isVerifying && <Loader2 className="w-4 h-4 animate-spin" />}
-                      {isVerifying ? "Memverifikasi..." : "Verifikasi"}
-                      {!isVerifying && <ArrowRight className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </form>
-              </motion.div>
-            )}
-
-            {/* ── Step 3 ── */}
-            {step === 2 && (
-              <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
-                <div className="mb-6">
-                  <p className="text-xs font-body text-primary font-semibold uppercase tracking-wider mb-1">Langkah 3 dari 3</p>
+                  <p className="text-xs font-body text-primary font-semibold uppercase tracking-wider mb-1">Langkah 2 dari 2</p>
                   <h1 className="font-display text-2xl font-bold">Buat Password</h1>
                   <p className="text-muted-foreground font-body text-sm mt-0.5">Hampir selesai! Buat password yang kuat.</p>
                 </div>
@@ -363,12 +262,29 @@ export default function RegisterPage() {
                       </p>
                     )}
                   </div>
-                  <Button type="submit" className="w-full h-11 font-body font-semibold mt-2"
-                    disabled={isRegistering || passMismatch || !password}>
-                    {isRegistering
-                      ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Membuat akun...</>
-                      : "Selesai & Masuk"}
-                  </Button>
+
+                  {/* CAPTCHA */}
+                  <div className="flex justify-center pt-1">
+                    <Turnstile
+                      ref={turnstileRef}
+                      siteKey={TURNSTILE_SITE_KEY}
+                      onSuccess={(token) => setCaptchaToken(token)}
+                      onExpire={() => setCaptchaToken(null)}
+                      onError={() => setCaptchaToken(null)}
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="h-11 px-4" onClick={() => setStep(0)}>
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                    <Button type="submit" className="flex-1 h-11 font-body font-semibold"
+                      disabled={isRegistering || passMismatch || !password || !captchaToken}>
+                      {isRegistering
+                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Membuat akun...</>
+                        : "Selesai & Masuk"}
+                    </Button>
+                  </div>
                   <p className="text-center text-xs text-muted-foreground font-body">
                     Dengan mendaftar, kamu menyetujui{" "}
                     <span className="text-primary cursor-pointer hover:underline">Syarat & Ketentuan</span> kami.

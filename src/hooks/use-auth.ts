@@ -95,35 +95,6 @@ export const useAuth = () => {
   };
 };
 
-export const useSendOtp = () => {
-  return useMutation({
-    mutationFn: async (email: string) => {
-      const response = await apiClient.post("/auth/send-otp", { email });
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("Kode OTP dikirim! Cek email kamu.");
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "Gagal mengirim OTP.";
-      toast.error(message);
-    },
-  });
-};
-
-export const useVerifyOtp = () => {
-  return useMutation({
-    mutationFn: async ({ email, code }: { email: string; code: string }) => {
-      const response = await apiClient.post("/auth/verify-otp", { email, code });
-      return response.data;
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "Kode OTP tidak valid.";
-      toast.error(message);
-    },
-  });
-};
-
 
 export const useDeleteAccount = () => {
   const queryClient = useQueryClient();
