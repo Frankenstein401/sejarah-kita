@@ -13,7 +13,7 @@ const HeroSection = () => {
   ];
 
   return (
-    <section className="relative min-h-[600px] overflow-hidden" style={{ height: "100svh" }}>
+    <section className="relative h-screen min-h-[600px] overflow-hidden">
       <img
         src={heroImage}
         alt="Candi bersejarah Indonesia saat golden hour"

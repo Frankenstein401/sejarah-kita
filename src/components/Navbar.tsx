@@ -65,10 +65,7 @@ const Navbar = () => {
   const showSolid = scrolled || !isHome || isMobile;
 
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6 }}
+    <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         showSolid
           ? "bg-background/95 backdrop-blur-md border-b border-border shadow-sm"
@@ -303,7 +300,7 @@ const Navbar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.nav>
+    </nav>
   );
 };
 
