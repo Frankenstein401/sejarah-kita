@@ -13,6 +13,7 @@ import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ScrollToTop from "./components/ScrollToTop";
+import { GuestRoute, ProtectedRoute, AdminRoute } from "./components/RouteGuards";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminArticles from "./pages/admin/AdminArticles";
@@ -42,21 +43,29 @@ const App = () => {
               <Route path="/artikel" element={<ArticleList />} />
               <Route path="/tentang" element={<AboutPage />} />
               <Route path="/artikel/:slug" element={<ArticleDetail />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              
-              {/* Admin routes */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="articles" element={<AdminArticles />} />
-                <Route path="quizzes" element={<AdminQuizzes />} />
-                <Route path="comments" element={<AdminComments />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="map" element={<AdminMapEditor />} />
-                <Route path="timeline" element={<AdminTimeline />} />
+              {/* Guest only: redirect ke home kalau sudah login */}
+              <Route element={<GuestRoute />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
               </Route>
 
-              <Route path="/profil" element={<ProfilePage />} />
+              {/* Login wajib */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/profil" element={<ProfilePage />} />
+              </Route>
+
+              {/* Admin only */}
+              <Route element={<AdminRoute />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="articles" element={<AdminArticles />} />
+                  <Route path="quizzes" element={<AdminQuizzes />} />
+                  <Route path="comments" element={<AdminComments />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="map" element={<AdminMapEditor />} />
+                  <Route path="timeline" element={<AdminTimeline />} />
+                </Route>
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
