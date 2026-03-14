@@ -121,43 +121,25 @@ export default function AdminQuizzes() {
               >
                 <Card className="border-border hover:shadow-md transition-shadow">
                   <CardContent className="p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-foreground">{quiz.title}</h3>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <BookOpen className="w-3 h-3 text-muted-foreground" />
-                          <p className="text-xs text-muted-foreground truncate">
-                            {quiz.article?.title || "Artikel tidak ditemukan"}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-foreground">{quiz.title}</h3>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <BookOpen className="w-3 h-3 text-muted-foreground shrink-0" />
+                            <p className="text-xs text-muted-foreground truncate">
+                              {quiz.article?.title || "Artikel tidak ditemukan"}
+                            </p>
+                          </div>
+                          <p className="text-xs text-muted-foreground/60 mt-0.5">
+                            {quiz.questions_count ?? 0} soal
                           </p>
                         </div>
-                        <p className="text-xs text-muted-foreground/60 mt-0.5">
-                          {quiz.questions_count ?? 0} soal
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-4 text-sm flex-wrap">
-                        <div className="text-center">
-                          <p className="font-bold text-foreground">{quiz.attempts_count || 0}</p>
-                          <p className="text-xs text-muted-foreground">Percobaan</p>
-                        </div>
-                        <div className="text-center min-w-[80px]">
-                          <p className="font-bold text-foreground">{quiz.avg_score || 0}%</p>
-                          <Progress value={quiz.avg_score || 0} className="h-1.5 mt-1" />
-                        </div>
-                        <Badge
-                          variant={(quiz.avg_score || 0) >= 75 ? "default" : "secondary"}
-                          className={(quiz.avg_score || 0) >= 75 ? "bg-secondary text-secondary-foreground" : ""}
-                        >
-                          {(quiz.avg_score || 0) >= 75 ? "Baik" : "Perlu Review"}
-                        </Badge>
-
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 shrink-0">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-primary"
-                            title="Edit kuis"
                             onClick={() => openEdit(quiz)}
                           >
                             <Pencil className="w-4 h-4" />
@@ -166,12 +148,28 @@ export default function AdminQuizzes() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            title="Hapus kuis"
                             onClick={() => setDeleteId(quiz.id)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-foreground text-sm">{quiz.attempts_count || 0}</span>
+                          <span className="text-xs text-muted-foreground">Percobaan</span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-1 min-w-[120px]">
+                          <span className="text-sm font-bold">{quiz.avg_score || 0}%</span>
+                          <Progress value={quiz.avg_score || 0} className="h-1.5 flex-1" />
+                        </div>
+                        <Badge
+                          variant={(quiz.avg_score || 0) >= 75 ? "default" : "secondary"}
+                          className={(quiz.avg_score || 0) >= 75 ? "bg-secondary text-secondary-foreground" : ""}
+                        >
+                          {(quiz.avg_score || 0) >= 75 ? "Baik" : "Perlu Review"}
+                        </Badge>
                       </div>
                     </div>
                   </CardContent>

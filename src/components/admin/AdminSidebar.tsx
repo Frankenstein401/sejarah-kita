@@ -37,7 +37,7 @@ export function AdminSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="offcanvas">
       <SidebarContent>
         {/* Brand */}
         <div className={`flex items-center gap-2 px-4 py-5 border-b border-sidebar-border ${collapsed ? "justify-center" : ""}`}>

@@ -86,13 +86,13 @@ export default function AdminArticles() {
               transition={{ delay: index * 0.03 }}
             >
               <Card className="border-border hover:shadow-md transition-all">
-                <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
-                  <div className="w-full md:w-24 h-24 rounded-lg overflow-hidden shrink-0 bg-muted">
+                <CardContent className="p-4 flex gap-4">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shrink-0 bg-muted">
                     <img src={article.hero_image} alt="" className="w-full h-full object-cover" />
                   </div>
-                  
+
                   <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
                         {article.era.name}
                       </Badge>
@@ -103,34 +103,33 @@ export default function AdminArticles() {
                         <Badge variant="secondary" className="text-[9px] h-4">Draft</Badge>
                       )}
                     </div>
-                    <h3 className="font-display font-bold text-lg text-foreground truncate">{article.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{article.summary}</p>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-9 px-3 gap-1.5" asChild>
-                      <Link to={`/artikel/${article.slug}`}>
-                        <Eye className="w-4 h-4" /> <span className="hidden sm:inline">Lihat</span>
-                      </Link>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-9 px-3 gap-1.5 text-secondary border-secondary/30 hover:bg-secondary/10"
-                      onClick={() => handleEdit(article)}
-                    >
-                      <Edit2 className="w-4 h-4" /> <span className="hidden sm:inline">Edit</span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-9 px-3 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
-                      onClick={() => {
-                        if(confirm("Hapus artikel ini? Semua kuis dan komentar terkait akan ikut terhapus.")) deleteArticle(article.id);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" /> <span className="hidden sm:inline">Hapus</span>
-                    </Button>
+                    <h3 className="font-display font-bold text-base sm:text-lg text-foreground line-clamp-1">{article.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-1 hidden sm:block">{article.summary}</p>
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <Button variant="outline" size="sm" className="h-8 px-2.5 gap-1" asChild>
+                        <Link to={`/artikel/${article.slug}`}>
+                          <Eye className="w-3.5 h-3.5" /> <span className="hidden sm:inline text-xs">Lihat</span>
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2.5 gap-1 text-secondary border-secondary/30 hover:bg-secondary/10"
+                        onClick={() => handleEdit(article)}
+                      >
+                        <Edit2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline text-xs">Edit</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2.5 gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                        onClick={() => {
+                          if(confirm("Hapus artikel ini? Semua kuis dan komentar terkait akan ikut terhapus.")) deleteArticle(article.id);
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline text-xs">Hapus</span>
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

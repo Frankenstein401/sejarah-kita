@@ -46,12 +46,12 @@ export default function AdminComments() {
           <h1 className="font-display text-2xl font-bold text-foreground">Moderasi Diskusi</h1>
           <p className="text-sm text-muted-foreground mt-1">Kelola dan tinjau komentar dari para penjelajah</p>
         </div>
-        <div className="flex bg-muted p-1 rounded-lg">
+        <div className="flex bg-muted p-1 rounded-lg w-full sm:w-auto">
           {(["semua", "pending", "disetujui"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${
                 filter === f ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -80,7 +80,7 @@ export default function AdminComments() {
             >
               <Card className={`border-border overflow-hidden ${!comment.is_approved ? "border-l-4 border-l-amber-500" : ""}`}>
                 <CardContent className="p-0">
-                  <div className="p-5 flex flex-col md:flex-row gap-5">
+                  <div className="p-4 flex flex-col gap-4">
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center flex-wrap gap-x-4 gap-y-2">
                         <div className="flex items-center gap-2">
@@ -109,31 +109,31 @@ export default function AdminComments() {
                       </p>
                     </div>
 
-                    <div className="flex md:flex-col gap-2 justify-end">
+                    <div className="flex flex-row gap-2">
                       {!comment.is_approved && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="text-secondary border-secondary/30 hover:bg-secondary/10 hover:text-secondary gap-1.5 h-9"
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-secondary border-secondary/30 hover:bg-secondary/10 hover:text-secondary gap-1.5 h-9"
                           onClick={() => approve(comment.id)}
                         >
                           <Check className="w-4 h-4" /> Setujui
                         </Button>
                       )}
                       {comment.is_approved && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="text-amber-600 border-amber-500/30 hover:bg-amber-50 gap-1.5 h-9"
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-amber-600 border-amber-500/30 hover:bg-amber-50 gap-1.5 h-9"
                           onClick={() => reject(comment.id)}
                         >
                           <X className="w-4 h-4" /> Tolak
                         </Button>
                       )}
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1.5 h-9"
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-destructive border-destructive/30 hover:bg-destructive/10 gap-1.5 h-9"
                         onClick={() => {
                           if (confirm("Hapus komentar ini selamanya?")) deleteComment(comment.id);
                         }}
