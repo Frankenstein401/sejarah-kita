@@ -1,8 +1,7 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useNavigationType } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
-/** Baca user dari localStorage secara sinkron (tanpa nunggu API). */
 function getStoredUser(): { role: string } | null {
   try {
     const raw = localStorage.getItem("user");
@@ -20,15 +19,22 @@ function Loading() {
   );
 }
 
-/** Hanya untuk tamu. Kalau sudah login → redirect ke home. */
+/**
+ * Hanya tamu yang datang via klik tombol (PUSH).
+ * Direct URL (POP) → redirect ke /.
+ * Sudah login → redirect ke /.
+ */
 export function GuestRoute() {
-  const stored = getStoredUser();
+  const navType = useNavigationType();
   const hasToken = !!localStorage.getItem("token");
+  const stored = getStoredUser();
 
-  // Cek sinkron dulu — kalau ada token + user di localStorage, langsung redirect
+  // Direct URL / reload → blokir
+  if (navType === "POP") return <Navigate to="/" replace />;
+
+  // Sudah login → redirect ke home
   if (hasToken && stored) return <Navigate to="/" replace />;
 
-  // Kalau token ada tapi user belum ada (misal refresh), tunggu API
   const { user, isLoading } = useAuth();
   if (hasToken && isLoading) return <Loading />;
   if (user) return <Navigate to="/" replace />;
@@ -36,30 +42,26 @@ export function GuestRoute() {
   return <Outlet />;
 }
 
-/** Wajib login. Kalau belum login → redirect ke /login. */
+/** Wajib login. Kalau belum login → redirect ke /. */
 export function ProtectedRoute() {
   const hasToken = !!localStorage.getItem("token");
-
-  // Tidak ada token sama sekali → langsung redirect
-  if (!hasToken) return <Navigate to="/login" replace />;
+  if (!hasToken) return <Navigate to="/" replace />;
 
   const { user, isLoading } = useAuth();
   if (isLoading) return <Loading />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
 
   return <Outlet />;
 }
 
-/** Wajib admin. Kalau bukan admin → redirect ke home. */
+/** Wajib admin. Kalau bukan admin → redirect ke /. */
 export function AdminRoute() {
-  const stored = getStoredUser();
   const hasToken = !!localStorage.getItem("token");
+  const stored = getStoredUser();
 
-  // Cek sinkron: tidak ada token atau role bukan admin → langsung blokir
   if (!hasToken) return <Navigate to="/" replace />;
   if (stored && stored.role !== "admin") return <Navigate to="/" replace />;
 
-  // Tunggu konfirmasi dari API
   const { user, isLoading } = useAuth();
   if (isLoading) return <Loading />;
   if (!user || user.role !== "admin") return <Navigate to="/" replace />;
