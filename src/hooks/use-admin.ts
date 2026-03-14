@@ -277,6 +277,69 @@ export const useDeleteMapLocation = () => {
   });
 };
 
+// ─── Timeline ──────────────────────────────────────────────────────────────
+
+export const useAdminTimeline = () => {
+  return useQuery({
+    queryKey: ["admin-timeline"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: any[] }>("/admin/timeline");
+      return response.data.data;
+    },
+  });
+};
+
+export const useCreateTimeline = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiClient.post("/admin/timeline", data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Event timeline berhasil dibuat.");
+      queryClient.invalidateQueries({ queryKey: ["admin-timeline"] });
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Gagal membuat event.");
+    },
+  });
+};
+
+export const useUpdateTimeline = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response = await apiClient.put(`/admin/timeline/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Event timeline berhasil diperbarui.");
+      queryClient.invalidateQueries({ queryKey: ["admin-timeline"] });
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Gagal memperbarui event.");
+    },
+  });
+};
+
+export const useDeleteTimeline = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(`/admin/timeline/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Event timeline berhasil dihapus.");
+      queryClient.invalidateQueries({ queryKey: ["admin-timeline"] });
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    },
+  });
+};
+
 // ─── Settings / Profile ────────────────────────────────────────────────────
 
 export const useChangePassword = () => {

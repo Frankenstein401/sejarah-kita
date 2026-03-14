@@ -20,6 +20,7 @@ import AdminQuizzes from "./pages/admin/AdminQuizzes";
 import AdminComments from "./pages/admin/AdminComments";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminMapEditor from "./pages/admin/AdminMapEditor";
+import AdminTimeline from "./pages/admin/AdminTimeline";
 import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => {
                 <Route path="comments" element={<AdminComments />} />
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="map" element={<AdminMapEditor />} />
+                <Route path="timeline" element={<AdminTimeline />} />
               </Route>
 
               <Route path="/profil" element={<ProfilePage />} />
