@@ -162,7 +162,7 @@ export async function sendToEyang(userText: string): Promise<string> {
   if (!_session || _sessionIsAdmin !== admin) {
     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash",
       systemInstruction: BASE_SYSTEM + (admin ? ADMIN_EXTRA : ""),
       tools: admin ? ADMIN_TOOLS : undefined,
     });
