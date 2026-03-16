@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { Send, X } from "lucide-react";
+import { Send, X, Sparkles } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { matchResponse } from "@/data/eyangku-responses";
+import { sendToEyang, isAdminUser } from "@/lib/eyang-gemini";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ const INITIAL_GREETING: ChatMessage = {
 const QUICK_REPLIES = [
   "Ceritakan Borobudur",
   "Apa itu Majapahit?",
-  "Tentang website ini",
+  "Siapa Gajah Mada?",
 ];
 
 // ─── EyangKu SVG Avatar ────────────────────────────────────────────────
@@ -164,7 +164,10 @@ const ChatPanel = ({
           </div>
           <div>
             <p className="font-display text-sm font-semibold text-foreground leading-tight">EyangKu</p>
-            <p className="text-[10px] font-body text-muted-foreground">Penasihat Sejarah</p>
+            <p className="text-[10px] font-body text-muted-foreground flex items-center gap-0.5">
+              <Sparkles className="w-2.5 h-2.5" />
+              {isAdminUser() ? "Mode Admin · AI" : "Penasihat Sejarah · AI"}
+            </p>
           </div>
         </div>
         <button
@@ -243,18 +246,21 @@ const EyangKu = () => {
     [0, 4, -3, 5, -3, 3, -2, 0]
   );
 
-  const sendMessage = (text: string) => {
+  const sendMessage = async (text: string) => {
     const userMsg: ChatMessage = { id: genId(), role: "user", text };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
-
-    const delay = 800 + Math.random() * 700;
-    setTimeout(() => {
-      const response = matchResponse(text);
-      const botMsg: ChatMessage = { id: genId(), role: "eyangku", text: response };
-      setMessages((prev) => [...prev, botMsg]);
+    try {
+      const response = await sendToEyang(text);
+      setMessages((prev) => [...prev, { id: genId(), role: "eyangku", text: response }]);
+    } catch {
+      setMessages((prev) => [...prev, {
+        id: genId(), role: "eyangku",
+        text: "Maaf cucuku, Eyang sedang tidak bisa menjawab. Coba lagi sebentar ya.",
+      }]);
+    } finally {
       setIsTyping(false);
-    }, delay);
+    }
   };
 
   const handleQuickReply = (text: string) => {
